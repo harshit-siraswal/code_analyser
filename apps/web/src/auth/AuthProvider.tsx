@@ -9,8 +9,11 @@ import {
 } from "react";
 import {
   createUserWithEmailAndPassword,
+  GoogleAuthProvider,
   onAuthStateChanged,
+  sendEmailVerification,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut,
   type User
 } from "firebase/auth";
@@ -22,6 +25,7 @@ type AuthContextValue = {
   loading: boolean;
   error: string | null;
   signInWithEmail: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<void>;
   signOutUser: () => Promise<void>;
   getIdToken: () => Promise<string | null>;
@@ -38,6 +42,11 @@ async function syncBackendSession(user: User): Promise<void> {
   });
 }
 
+function requiresVerifiedEmail(user: User): boolean {
+  const hasPasswordProvider = user.providerData.some((provider) => provider?.providerId === "password");
+  return hasPasswordProvider && !user.emailVerified;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,21 +54,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (nextUser) => {
-      setUser(nextUser);
-      if (nextUser) {
-        try {
-          await syncBackendSession(nextUser);
-          setError(null);
-        } catch (err) {
-          // Backend sync endpoint may not exist yet during early setup.
-          // Keep frontend auth usable and proceed with Firebase session.
-          console.warn("Backend session sync skipped.", err);
-          setError(null);
-        }
-      } else {
-        setError(null);
+      if (!nextUser) {
+        setUser(null);
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+
+      try {
+        await nextUser.reload();
+      } catch (err) {
+        console.warn("Could not refresh auth state from Firebase.", err);
+      }
+
+      if (requiresVerifiedEmail(nextUser)) {
+        setUser(null);
+        setError("Verify your email before signing in.");
+        setLoading(false);
+        await signOut(auth);
+        return;
+      }
+
+      setUser(nextUser);
+      try {
+        await syncBackendSession(nextUser);
+        setError(null);
+      } catch (err) {
+        // Backend sync endpoint may not exist yet during early setup.
+        // Keep frontend auth usable and proceed with Firebase session.
+        console.warn("Backend session sync skipped.", err);
+        setError(null);
+      } finally {
+        setLoading(false);
+      }
     });
 
     return () => unsubscribe();
@@ -67,15 +93,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithEmail = useCallback(async (email: string, password: string) => {
     setError(null);
-    await signInWithEmailAndPassword(auth, email, password);
+    const credential = await signInWithEmailAndPassword(auth, email, password);
+    await credential.user.reload();
+
+    if (!requiresVerifiedEmail(credential.user)) {
+      return;
+    }
+
+    try {
+      await sendEmailVerification(credential.user);
+    } catch (err) {
+      console.warn("Could not send verification email.", err);
+    } finally {
+      await signOut(auth);
+    }
+
+    throw new Error("Verify your email before signing in. A new verification link was sent.");
+  }, []);
+
+  const signInWithGoogle = useCallback(async () => {
+    setError(null);
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: "select_account" });
+    await signInWithPopup(auth, provider);
   }, []);
 
   const signUpWithEmail = useCallback(async (email: string, password: string) => {
     setError(null);
-    await createUserWithEmailAndPassword(auth, email, password);
+    const credential = await createUserWithEmailAndPassword(auth, email, password);
+    await sendEmailVerification(credential.user);
+    await signOut(auth);
   }, []);
 
   const signOutUser = useCallback(async () => {
+    setError(null);
     await signOut(auth);
   }, []);
 
@@ -87,11 +138,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       error,
       signInWithEmail,
+      signInWithGoogle,
       signUpWithEmail,
       signOutUser,
       getIdToken
     }),
-    [error, getIdToken, loading, signInWithEmail, signOutUser, signUpWithEmail, user]
+    [error, getIdToken, loading, signInWithEmail, signInWithGoogle, signOutUser, signUpWithEmail, user]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

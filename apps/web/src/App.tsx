@@ -1,7 +1,8 @@
-import { Link, NavLink, Navigate, Outlet, Route, Routes } from "react-router-dom";
+import { Link, NavLink, Outlet, Route, Routes } from "react-router-dom";
 import { useAuth } from "./auth/AuthProvider";
 import { ProtectedRoute, PublicOnlyRoute } from "./auth/ProtectedRoute";
 import { DashboardPage } from "./pages/DashboardPage";
+import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { ProblemsPage } from "./pages/ProblemsPage";
@@ -13,10 +14,11 @@ function AppShell() {
   return (
     <div className="shell">
       <header className="topbar">
-        <Link className="brand" to="/problems">
+        <Link className="brand" to="/">
           Code Analyser
         </Link>
         <nav>
+          <NavLink to="/">Home</NavLink>
           <NavLink to="/problems">Problems</NavLink>
           <NavLink to="/dashboard">Dashboard</NavLink>
         </nav>
@@ -32,20 +34,10 @@ function AppShell() {
   );
 }
 
-function HomeRedirect() {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return <p className="status-text">Loading app...</p>;
-  }
-
-  return <Navigate to={user ? "/problems" : "/login"} replace />;
-}
-
 export function App() {
   return (
     <Routes>
-      <Route path="/" element={<HomeRedirect />} />
+      <Route path="/" element={<LandingPage />} />
 
       <Route element={<PublicOnlyRoute />}>
         <Route path="/login" element={<LoginPage />} />
