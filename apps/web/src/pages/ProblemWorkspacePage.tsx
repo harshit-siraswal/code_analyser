@@ -143,6 +143,11 @@ function compactOutput(value: string | null): string {
   return value.trim().replace(/\s+/g, " ").slice(0, 240);
 }
 
+function formatIo(value: string | null | undefined): string {
+  const normalized = (value ?? "").replace(/\r\n/g, "\n").trimEnd();
+  return normalized.length > 0 ? normalized : "<empty>";
+}
+
 function buildStarterCode(problem: ProblemDetail, languageId: number): string {
   if (languageId === 71) {
     return problem.starterCode;
@@ -294,8 +299,10 @@ export function ProblemWorkspacePage() {
   const { getIdToken } = useAuth();
   const [searchParams] = useSearchParams();
   const hydratedSessionRef = useRef<string | null>(null);
+  const workspaceRef = useRef<HTMLElement | null>(null);
   const requestedSessionId = searchParams.get("sessionId");
   const shouldAutoAnalyze = searchParams.get("autoAnalyze") === "1";
+  const [focusMode, setFocusMode] = useState(false);
   const [problem, setProblem] = useState<ProblemDetail | null>(null);
   const [code, setCode] = useState("");
   const [languages, setLanguages] = useState<LanguageOption[]>(FALLBACK_LANGUAGES);
@@ -391,6 +398,21 @@ export function ProblemWorkspacePage() {
   const selectedLanguage = useMemo(() => {
     return languages.find((language) => language.id === languageId) ?? languages[0] ?? null;
   }, [languageId, languages]);
+
+  const visibleSubmitTests = useMemo(
+    () => (submitResult ? submitResult.tests.filter((test) => !test.isHidden) : []),
+    [submitResult]
+  );
+
+  const hiddenSubmitTests = useMemo(
+    () => (submitResult ? submitResult.tests.filter((test) => Boolean(test.isHidden)) : []),
+    [submitResult]
+  );
+
+  const hiddenSubmitPassed = useMemo(
+    () => hiddenSubmitTests.filter((test) => test.passed).length,
+    [hiddenSubmitTests]
+  );
 
   const flowSteps = useMemo(
     () => [
@@ -610,6 +632,31 @@ export function ProblemWorkspacePage() {
       });
   }, [error, loading, problem, requestedSessionId, shouldAutoAnalyze]);
 
+  useEffect(() => {
+    const onFullScreenChange = () => {
+      setFocusMode(Boolean(document.fullscreenElement));
+    };
+
+    document.addEventListener("fullscreenchange", onFullScreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFullScreenChange);
+    };
+  }, []);
+
+  async function onToggleFocusMode() {
+    try {
+      if (!document.fullscreenElement) {
+        await workspaceRef.current?.requestFullscreen?.();
+        setFocusMode(true);
+      } else {
+        await document.exitFullscreen();
+        setFocusMode(false);
+      }
+    } catch {
+      setFocusMode((current) => !current);
+    }
+  }
+
   function onResetStarter() {
     if (!problem) {
       return;
@@ -649,7 +696,10 @@ export function ProblemWorkspacePage() {
   }
 
   return (
-    <main className="page workspace-page">
+    <main
+      ref={workspaceRef}
+      className={`page workspace-page${focusMode ? " focus-mode" : ""}`}
+    >
       <header className="workspace-header card">
         <div>
           <p className="eyebrow">Problem Workspace</p>
@@ -658,19 +708,26 @@ export function ProblemWorkspacePage() {
             End-to-end flow: run visible tests, submit full evaluation, then analyze your session.
           </p>
         </div>
-        <Link to="/problems" className="ghost-btn">
-          Back To Catalog
-        </Link>
+        <div className="workspace-header-actions">
+          <button type="button" className="ghost-btn" onClick={() => void onToggleFocusMode()}>
+            {focusMode ? "Exit Focus Mode" : "Focus Mode"}
+          </button>
+          <Link to="/problems" className="ghost-btn">
+            Back To Catalog
+          </Link>
+        </div>
       </header>
 
-      <section className="workspace-stepper card">
-        {flowSteps.map((step, index) => (
-          <div key={step.title} className={`workspace-step ${step.done ? "done" : ""}`}>
-            <span>{String(index + 1).padStart(2, "0")}</span>
-            <p>{step.title}</p>
-          </div>
-        ))}
-      </section>
+      {!focusMode ? (
+        <section className="workspace-stepper card">
+          {flowSteps.map((step, index) => (
+            <div key={step.title} className={`workspace-step ${step.done ? "done" : ""}`}>
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <p>{step.title}</p>
+            </div>
+          ))}
+        </section>
+      ) : null}
 
       {loading ? <p className="status-text">Loading workspace...</p> : null}
       {error ? <p className="error-text">{error}</p> : null}
@@ -773,19 +830,21 @@ export function ProblemWorkspacePage() {
               aria-label="Code editor"
             />
 
-            <section className="workspace-terminal">
-              <header className="workspace-terminal-head">
-                <h4>Terminal</h4>
-                <p>{selectedLanguage?.name ?? "Language unavailable"}</p>
-              </header>
-              <pre>{terminalLines.join("\n")}</pre>
-            </section>
+            {!focusMode ? (
+              <section className="workspace-terminal">
+                <header className="workspace-terminal-head">
+                  <h4>Terminal</h4>
+                  <p>{selectedLanguage?.name ?? "Language unavailable"}</p>
+                </header>
+                <pre>{terminalLines.join("\n")}</pre>
+              </section>
+            ) : null}
 
             {runError ? <p className="error-text">{runError}</p> : null}
             {submitError ? <p className="error-text">{submitError}</p> : null}
             {analysisError ? <p className="error-text">{analysisError}</p> : null}
 
-            {runResult ? (
+            {!focusMode && runResult ? (
               <section className="workspace-results">
                 <header className="workspace-results-head">
                   <h3>
@@ -807,13 +866,31 @@ export function ProblemWorkspacePage() {
                       </p>
                       <p className="workspace-test-meta">{test.statusDescription}</p>
                       {test.note ? <p className="workspace-test-meta">{test.note}</p> : null}
+                      <p className="workspace-test-meta">Input</p>
+                      <pre className="workspace-io-block">{formatIo(test.input)}</pre>
+                      <p className="workspace-test-meta">Expected Output</p>
+                      <pre className="workspace-io-block">{formatIo(test.expectedOutput)}</pre>
+                      <p className="workspace-test-meta">Your Output</p>
+                      <pre className="workspace-io-block">{formatIo(test.stdout)}</pre>
+                      {test.stderr ? (
+                        <>
+                          <p className="workspace-test-meta">Runtime Error</p>
+                          <pre className="workspace-io-block">{formatIo(test.stderr)}</pre>
+                        </>
+                      ) : null}
+                      {test.compileOutput ? (
+                        <>
+                          <p className="workspace-test-meta">Compile Output</p>
+                          <pre className="workspace-io-block">{formatIo(test.compileOutput)}</pre>
+                        </>
+                      ) : null}
                     </article>
                   ))}
                 </div>
               </section>
             ) : null}
 
-            {submitResult ? (
+            {!focusMode && submitResult ? (
               <section className="workspace-results submit-results">
                 <header className="workspace-results-head">
                   <h3>
@@ -827,33 +904,49 @@ export function ProblemWorkspacePage() {
                 </header>
 
                 <div className="workspace-test-grid">
-                  {submitResult.tests.map((test) => (
+                  {visibleSubmitTests.map((test) => (
                     <article
                       key={`submit-${test.id}`}
                       className={`workspace-test-card ${test.passed ? "passed" : "failed"}`}
                     >
                       <p className="workspace-test-title">
-                        {test.id}
-                        {test.isHidden ? " (Hidden)" : " (Visible)"} - {test.passed ? "Pass" : "Fail"}
+                        {test.id} (Visible) - {test.passed ? "Pass" : "Fail"}
                       </p>
                       <p className="workspace-test-meta">{test.statusDescription}</p>
+                      <p className="workspace-test-meta">Input</p>
+                      <pre className="workspace-io-block">{formatIo(test.input)}</pre>
+                      <p className="workspace-test-meta">Expected Output</p>
+                      <pre className="workspace-io-block">{formatIo(test.expectedOutput)}</pre>
+                      <p className="workspace-test-meta">Your Output</p>
+                      <pre className="workspace-io-block">{formatIo(test.stdout)}</pre>
                       {test.stderr ? (
-                        <p>
-                          <strong>Stderr:</strong> {test.stderr}
-                        </p>
+                        <>
+                          <p className="workspace-test-meta">Runtime Error</p>
+                          <pre className="workspace-io-block">{formatIo(test.stderr)}</pre>
+                        </>
                       ) : null}
                       {test.compileOutput ? (
-                        <p>
-                          <strong>Compile:</strong> {test.compileOutput}
-                        </p>
+                        <>
+                          <p className="workspace-test-meta">Compile Output</p>
+                          <pre className="workspace-io-block">{formatIo(test.compileOutput)}</pre>
+                        </>
                       ) : null}
                     </article>
                   ))}
                 </div>
+
+                {hiddenSubmitTests.length > 0 ? (
+                  <div className="workspace-hidden-summary">
+                    <p>
+                      Hidden tests passed {hiddenSubmitPassed} / {hiddenSubmitTests.length}
+                    </p>
+                    <p>Hidden test inputs and expected outputs are intentionally not shown.</p>
+                  </div>
+                ) : null}
               </section>
             ) : null}
 
-            {analysisResult ? (
+            {!focusMode && analysisResult ? (
               <section className="workspace-results analysis-results">
                 <header className="workspace-results-head">
                   <h3>AI Analysis</h3>

@@ -1,4 +1,4 @@
-import { type FormEventHandler, useEffect, useMemo, useState } from "react";
+import { type FormEventHandler, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 
@@ -19,12 +19,13 @@ type ProblemsResponse = {
 };
 
 const difficultyOptions: Array<"All" | "Easy" | "Medium" | "Hard"> = ["All", "Easy", "Medium", "Hard"];
-const PAGE_SIZE = 20;
+const pageSizeOptions = [20, 50, 100];
 
 export function ProblemsPage() {
   const [problems, setProblems] = useState<ProblemSummary[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [queryInput, setQueryInput] = useState("");
@@ -41,7 +42,7 @@ export function ProblemsPage() {
       try {
         const params = new URLSearchParams({
           page: String(page),
-          limit: String(PAGE_SIZE)
+          limit: String(pageSize)
         });
 
         if (query) {
@@ -59,11 +60,11 @@ export function ProblemsPage() {
         // Compatibility fallback for environments still returning full list responses.
         if (
           (typeof response.page !== "number" || typeof response.limit !== "number") &&
-          nextProblems.length > PAGE_SIZE
+          nextProblems.length > pageSize
         ) {
-          const start = (page - 1) * PAGE_SIZE;
+          const start = (page - 1) * pageSize;
           nextTotal = nextProblems.length;
-          nextProblems = nextProblems.slice(start, start + PAGE_SIZE);
+          nextProblems = nextProblems.slice(start, start + pageSize);
         }
 
         if (isMounted) {
@@ -86,27 +87,9 @@ export function ProblemsPage() {
     return () => {
       isMounted = false;
     };
-  }, [difficulty, page, query]);
+  }, [difficulty, page, pageSize, query]);
 
-  const filtered = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-
-    return problems.filter((problem) => {
-      const matchesDifficulty = difficulty === "All" || problem.difficulty === difficulty;
-      if (!matchesDifficulty) {
-        return false;
-      }
-
-      if (!normalizedQuery) {
-        return true;
-      }
-
-      const haystack = `${problem.title} ${problem.summary} ${problem.concepts.join(" ")}`.toLowerCase();
-      return haystack.includes(normalizedQuery);
-    });
-  }, [difficulty, problems, query]);
-
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   const submitSearch: FormEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
@@ -159,6 +142,23 @@ export function ProblemsPage() {
           </select>
         </label>
 
+        <label className="catalog-select">
+          <span>Per Page</span>
+          <select
+            value={pageSize}
+            onChange={(event) => {
+              setPage(1);
+              setPageSize(Number(event.target.value));
+            }}
+          >
+            {pageSizeOptions.map((size) => (
+              <option key={size} value={size}>
+                {size}
+              </option>
+            ))}
+          </select>
+        </label>
+
         <div className="catalog-action-row">
           <button type="submit" className="ghost-btn compact">
             Search
@@ -171,19 +171,19 @@ export function ProblemsPage() {
 
       {loading ? <p className="status-text">Loading problems...</p> : null}
       {error ? <p className="error-text">{error}</p> : null}
-      {!loading && !error ? <p className="catalog-meta">Showing {filtered.length} of {total} problems</p> : null}
+      {!loading && !error ? <p className="catalog-meta">Showing {problems.length} of {total} problems</p> : null}
 
       {!loading && !error ? (
         <>
           <section className="problem-grid catalog-grid">
-          {filtered.length === 0 ? (
+          {problems.length === 0 ? (
             <article className="card">
               <h2>No matching problems</h2>
               <p>Try a different search query or remove filters.</p>
             </article>
           ) : null}
 
-          {filtered.map((problem) => (
+          {problems.map((problem) => (
             <article key={problem.slug} className="problem-card catalog-card">
               <div className="catalog-card-head">
                 <p className="problem-difficulty">{problem.difficulty}</p>

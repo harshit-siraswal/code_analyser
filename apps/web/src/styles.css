@@ -602,7 +602,7 @@ button {
 .catalog-controls {
   margin-top: 18px;
   display: grid;
-  grid-template-columns: 1.6fr 0.8fr auto;
+  grid-template-columns: 1.45fr 0.75fr 0.6fr auto;
   gap: 12px;
 }
 
@@ -721,6 +721,12 @@ button {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+  flex-wrap: wrap;
+}
+
+.workspace-header-actions {
+  display: flex;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -971,6 +977,19 @@ button {
   background: #ffffff;
 }
 
+.workspace-io-block {
+  margin: 4px 0 0;
+  border: 1px solid #dce8df;
+  border-radius: 10px;
+  padding: 8px;
+  background: #fcfffd;
+  color: #2f3430;
+  font: 500 0.77rem/1.45 "Consolas", "Menlo", monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
 .submit-results {
   background: #f4fbf7;
 }
@@ -1032,6 +1051,24 @@ button {
   overflow-wrap: anywhere;
 }
 
+.workspace-hidden-summary {
+  margin-top: 12px;
+  border: 1px dashed #c6d8cd;
+  border-radius: 10px;
+  background: #f8fcfa;
+  padding: 10px;
+}
+
+.workspace-hidden-summary p {
+  margin: 0;
+  color: #4e5f56;
+  font-size: 0.86rem;
+}
+
+.workspace-hidden-summary p + p {
+  margin-top: 5px;
+}
+
 .analysis-concepts {
   margin-top: 10px;
   display: grid;
@@ -1056,6 +1093,22 @@ button {
   margin: 0;
   color: #1d424a;
   font-weight: 700;
+}
+
+.workspace-page.focus-mode {
+  max-width: none;
+  width: 100%;
+  min-height: 100%;
+  padding-top: 12px;
+}
+
+.workspace-page.focus-mode .workspace-header {
+  margin-bottom: 10px;
+}
+
+.workspace-page.focus-mode .workspace-layout {
+  margin-top: 0;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
 }
 
 .analysis-recommendations {
@@ -2067,6 +2120,10 @@ button {
     grid-template-columns: 1fr;
   }
 
+  .workspace-page.focus-mode .workspace-layout {
+    grid-template-columns: 1fr;
+  }
+
   .workspace-test-grid {
     grid-template-columns: 1fr;
   }
@@ -2194,6 +2251,14 @@ button {
 
   .workspace-editor-actions .ghost-btn,
   .workspace-editor-actions .cta-btn {
+    flex: 1;
+  }
+
+  .workspace-header-actions {
+    width: 100%;
+  }
+
+  .workspace-header-actions .ghost-btn {
     flex: 1;
   }
 
