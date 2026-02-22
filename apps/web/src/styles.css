@@ -707,7 +707,7 @@ button {
 .workspace-stepper {
   margin-top: 14px;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -871,6 +871,14 @@ button {
   background: #fffefb;
 }
 
+.submit-results {
+  background: #fffaf2;
+}
+
+.analysis-results {
+  background: #f8fdfd;
+}
+
 .workspace-results-head h3 {
   margin: 0;
   font-family: "Fraunces", Georgia, serif;
@@ -922,6 +930,51 @@ button {
   color: #4d4540;
   font-size: 0.88rem;
   overflow-wrap: anywhere;
+}
+
+.analysis-concepts {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.analysis-concept-card {
+  border: 1px solid #c9e0e3;
+  border-radius: 12px;
+  background: #f2fbfd;
+  padding: 10px;
+}
+
+.analysis-concept-card p {
+  margin: 4px 0 0;
+  color: #335057;
+  font-size: 0.87rem;
+}
+
+.analysis-concept-name {
+  margin: 0;
+  color: #1d424a;
+  font-weight: 700;
+}
+
+.analysis-recommendations {
+  margin-top: 12px;
+}
+
+.analysis-recommendations h4 {
+  margin: 0 0 8px;
+  font-family: "Fraunces", Georgia, serif;
+}
+
+.analysis-recommendations ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #35545a;
+}
+
+.analysis-recommendations li + li {
+  margin-top: 6px;
 }
 
 .problem-difficulty {
@@ -1366,6 +1419,10 @@ button {
   .workspace-test-grid {
     grid-template-columns: 1fr;
   }
+
+  .analysis-concepts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 700px) {
@@ -1431,6 +1488,10 @@ button {
 
   .workspace-stepper {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .analysis-concepts {
+    grid-template-columns: 1fr;
   }
 
   .workspace-editor-actions {
