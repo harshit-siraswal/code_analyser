@@ -7,105 +7,42 @@ const TRUSTED_BY = [
   "PrepCircuit",
   "Campus Stack",
   "CodeSprint Labs",
-  "InterviewForge",
-  "SkillLoop"
+  "InterviewForge"
 ];
 
 const METRICS = [
-  { value: "1.2M+", label: "Attempts Analyzed" },
-  { value: "74%", label: "Faster Bug Resolution" },
-  { value: "38%", label: "Fewer Repeat Errors" },
-  { value: "10s", label: "Median Insight Generation" }
+  { value: "1.2M+", label: "Attempts processed" },
+  { value: "74%", label: "Faster debugging" },
+  { value: "10s", label: "Median analysis" },
+  { value: "24/7", label: "Practice uptime" }
 ];
 
-const PLATFORM_FEATURES = [
+const FEATURES = [
   {
-    title: "Attempt-First Feedback",
-    description:
-      "Move beyond accepted/rejected output. Track how each revision changes behavior and failure patterns.",
-    tag: "Core"
+    title: "Run + Submit",
+    description: "One workspace for quick checks and full validation."
   },
   {
-    title: "Session Timeline",
-    description:
-      "Understand the progression from syntax issues to logical fixes through a single interactive timeline.",
-    tag: "Analysis"
+    title: "Session AI",
+    description: "See pattern shifts across attempts, not only final status."
   },
   {
-    title: "Concept Coverage Map",
-    description:
-      "See which concepts your code actually uses and where your implementation avoids or misuses key patterns.",
-    tag: "Learning"
-  },
-  {
-    title: "Deliberate Practice Loop",
-    description:
-      "Run, submit, analyze, refine. Turn every failed attempt into an explicit next action.",
-    tag: "Workflow"
-  },
-  {
-    title: "Coach-Ready Dashboards",
-    description:
-      "Surface weak concepts, repeated errors, and progress trends for students, mentors, and teams.",
-    tag: "Dashboard"
-  },
-  {
-    title: "Secure Execution Isolation",
-    description:
-      "Evaluate code in sandboxed runners with strict resource controls for safe and consistent grading.",
-    tag: "Infra"
+    title: "Concept Signals",
+    description: "Know what you used, missed, and should sharpen next."
   }
 ];
 
-const EXECUTION_STEPS = [
-  {
-    phase: "01",
-    title: "Solve",
-    details: "Write and execute code against visible tests with fast local feedback."
-  },
-  {
-    phase: "02",
-    title: "Submit",
-    details: "Persist immutable snapshots and evaluate against complete hidden+visible cases."
-  },
-  {
-    phase: "03",
-    title: "Analyze",
-    details: "Generate concept-level diagnostics, diff traces, and error classification."
-  },
-  {
-    phase: "04",
-    title: "Iterate",
-    details: "Apply recommendations and close the exact misconceptions found in your timeline."
-  }
-];
-
-const TESTIMONIALS = [
-  {
-    quote:
-      "Our students stopped guessing. They could finally see exactly why each attempt failed and what to change next.",
-    person: "Priya Sharma",
-    role: "Lead Mentor, AlgoBootcamp"
-  },
-  {
-    quote:
-      "The timeline view made debugging behavior visible, not abstract. Review sessions became twice as productive.",
-    person: "Daniel Kim",
-    role: "Interview Coach, PrepCircuit"
-  },
-  {
-    quote:
-      "We used to track outcomes only. Now we track thinking quality, and our completion rates are improving weekly.",
-    person: "Maya Rahman",
-    role: "Program Director, Campus Stack"
-  }
+const FLOW = [
+  { phase: "01", title: "Solve", details: "Write code and test instantly." },
+  { phase: "02", title: "Submit", details: "Store attempt history with verdicts." },
+  { phase: "03", title: "Analyze", details: "Get focused recommendations." }
 ];
 
 export function LandingPage() {
   const { user, signOutUser } = useAuth();
 
   return (
-    <main className="landing-page startup-landing">
+    <main className="landing-page startup-landing fintech-theme">
       <header className="landing-nav startup-nav">
         <Link className="brand startup-brand" to="/">
           Code Analyser
@@ -130,7 +67,7 @@ export function LandingPage() {
                 Sign in
               </Link>
               <Link className="cta-btn compact" to="/register">
-                Start Free
+                Start free
               </Link>
             </>
           )}
@@ -139,19 +76,18 @@ export function LandingPage() {
 
       <section className="startup-hero">
         <div className="startup-hero-copy">
-          <p className="eyebrow">Engineering Better Problem Solvers</p>
-          <h1>Build coding confidence with feedback that explains thinking, not only scores.</h1>
+          <p className="eyebrow">Code Intelligence Studio</p>
+          <h1>Train like a serious engineering team.</h1>
           <p className="subtitle startup-subtitle">
-            Code Analyser transforms raw attempt history into actionable insight loops for learners,
-            coaches, and interview prep teams.
+            Faster feedback loops, cleaner submissions, clearer next steps.
           </p>
 
           <div className="hero-cta startup-hero-cta">
             <Link className="cta-btn" to={user ? "/problems" : "/register"}>
-              {user ? "Open Problem Catalog" : "Create Account"}
+              {user ? "Open Problems" : "Create Account"}
             </Link>
             <Link className="ghost-btn hero-secondary" to={user ? "/dashboard" : "/login"}>
-              {user ? "View Dashboard" : "Sign In"}
+              {user ? "Open Dashboard" : "Sign In"}
             </Link>
           </div>
 
@@ -176,14 +112,13 @@ export function LandingPage() {
 
       <section className="startup-features">
         <header className="startup-section-head">
-          <p className="eyebrow">Platform Highlights</p>
-          <h2>Everything you need for high-fidelity coding practice analytics.</h2>
+          <p className="eyebrow">What You Get</p>
+          <h2>Built for high-signal practice.</h2>
         </header>
 
-        <div className="startup-feature-grid">
-          {PLATFORM_FEATURES.map((feature) => (
+        <div className="startup-feature-grid lean-feature-grid">
+          {FEATURES.map((feature) => (
             <article key={feature.title} className="startup-feature-card">
-              <p className="startup-feature-tag">{feature.tag}</p>
               <h3>{feature.title}</h3>
               <p>{feature.description}</p>
             </article>
@@ -193,12 +128,12 @@ export function LandingPage() {
 
       <section className="startup-workflow">
         <header className="startup-section-head">
-          <p className="eyebrow">How It Works</p>
-          <h2>From submission to insight in four deterministic steps.</h2>
+          <p className="eyebrow">Flow</p>
+          <h2>Short loop. Better outcomes.</h2>
         </header>
 
-        <div className="startup-step-grid">
-          {EXECUTION_STEPS.map((step) => (
+        <div className="startup-step-grid lean-step-grid">
+          {FLOW.map((step) => (
             <article key={step.phase} className="startup-step-card">
               <p className="startup-step-phase">{step.phase}</p>
               <h3>{step.title}</h3>
@@ -208,35 +143,18 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section className="startup-testimonials">
-        <header className="startup-section-head">
-          <p className="eyebrow">What Teams Say</p>
-          <h2>Built for serious learning outcomes and measurable progress.</h2>
-        </header>
-
-        <div className="startup-testimonial-grid">
-          {TESTIMONIALS.map((testimonial) => (
-            <article key={testimonial.person} className="startup-testimonial-card">
-              <p className="startup-quote">"{testimonial.quote}"</p>
-              <p className="startup-person">{testimonial.person}</p>
-              <p className="startup-role">{testimonial.role}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
       <section className="startup-final-cta">
         <div>
-          <p className="eyebrow">Ready To Upgrade Practice Quality?</p>
-          <h2>Turn every failed attempt into a clear learning step.</h2>
-          <p>Launch your first analysis session in minutes.</p>
+          <p className="eyebrow">Start Today</p>
+          <h2>Solve. Submit. Learn faster.</h2>
+          <p>Everything in one focused workspace.</p>
         </div>
         <div className="startup-final-actions">
           <Link className="cta-btn" to={user ? "/problems" : "/register"}>
-            {user ? "Start Solving" : "Get Started Free"}
+            {user ? "Start Solving" : "Get Started"}
           </Link>
           <Link className="ghost-btn" to={user ? "/dashboard" : "/login"}>
-            {user ? "Open Dashboard" : "View Login"}
+            {user ? "Go To Dashboard" : "View Login"}
           </Link>
         </div>
       </section>
