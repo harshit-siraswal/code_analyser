@@ -602,7 +602,7 @@ button {
 .catalog-controls {
   margin-top: 18px;
   display: grid;
-  grid-template-columns: 1.6fr 0.8fr;
+  grid-template-columns: 1.6fr 0.8fr auto;
   gap: 12px;
 }
 
@@ -635,6 +635,24 @@ button {
 .catalog-select select:focus {
   outline: 2px solid #ffc980;
   border-color: #b57f49;
+}
+
+.catalog-action-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.catalog-action-row .ghost-btn {
+  margin-top: 0;
+  min-height: 42px;
+  padding: 10px 12px;
+}
+
+.catalog-meta {
+  margin: 12px 2px 0;
+  color: #5b645e;
+  font-size: 0.92rem;
 }
 
 .catalog-grid {
@@ -677,6 +695,21 @@ button {
 
 .catalog-open-btn {
   width: fit-content;
+}
+
+.catalog-pagination {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+.catalog-pagination p {
+  margin: 0;
+  min-width: 104px;
+  text-align: center;
+  color: #5b645e;
 }
 
 .workspace-page {
@@ -1737,6 +1770,101 @@ button {
   color: #697a72;
 }
 
+.dashboard-all-problems {
+  margin-top: 14px;
+  border: 1px solid #d8e2db;
+}
+
+.dashboard-all-problems h2 {
+  margin: 0;
+  font-family: "Instrument Serif", Georgia, serif;
+  color: #13241c;
+}
+
+.dashboard-all-problems > p {
+  margin: 6px 0 0;
+  color: #55675f;
+}
+
+.dashboard-all-problems-list {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.dashboard-all-problems-item {
+  border: 1px solid #d8e2db;
+  border-radius: 12px;
+  background: #fbfefc;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard-all-problems-item h3 {
+  margin: 0;
+  color: #1d3027;
+  font-size: 1rem;
+}
+
+.dashboard-all-problems-item p {
+  margin: 5px 0 0;
+  color: #586a62;
+  font-size: 0.89rem;
+}
+
+.dashboard-all-problems-meta {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+}
+
+.dashboard-all-problems-meta span {
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #1f6a4b;
+  font-weight: 700;
+}
+
+.dashboard-all-problems-meta strong {
+  min-height: 26px;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid transparent;
+}
+
+.dashboard-all-problems-meta strong.solved {
+  color: #125b40;
+  background: #e9f8f0;
+  border-color: #b8ddc8;
+}
+
+.dashboard-all-problems-meta strong.attempted {
+  color: #7d531b;
+  background: #fff8eb;
+  border-color: #ecd6ab;
+}
+
+.dashboard-all-problems-meta strong.not_started {
+  color: #5d5552;
+  background: #f5efeb;
+  border-color: #e2d4cb;
+}
+
+.dashboard-all-problems-meta a {
+  color: #155e46;
+  font-weight: 700;
+  font-size: 0.83rem;
+}
+
 @keyframes rise-in {
   0% {
     opacity: 0;
@@ -1863,6 +1991,11 @@ button {
     grid-template-columns: 1fr;
   }
 
+  .catalog-action-row {
+    align-items: center;
+    justify-content: flex-start;
+  }
+
   .workspace-layout {
     grid-template-columns: 1fr;
   }
@@ -1881,6 +2014,14 @@ button {
 
   .dashboard-main-grid {
     grid-template-columns: 1fr;
+  }
+
+  .dashboard-all-problems-item {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-all-problems-meta {
+    justify-items: start;
   }
 }
 
@@ -2003,6 +2144,10 @@ button {
     justify-items: start;
     grid-template-columns: auto auto;
     align-items: center;
+  }
+
+  .dashboard-all-problems-item {
+    padding: 11px;
   }
 }
 

@@ -16,6 +16,28 @@ Build and launch the MVP of the Deep Analysis coding practice platform in 12 wee
 - Analysis UI (summary, concept breakdown, timeline, diff)
 - Basic progress dashboard
 
+## 1.1 Execution Status Update (February 22, 2026)
+
+### Completed
+
+- Azure API and analysis services are deployed with custom images (`prod2`).
+- Judge0 VM integration is live and API-authenticated.
+- Firebase admin and Neon DB secrets are configured in Azure API container app.
+- APPS import flow is working; DB-backed problem catalog serves imported records.
+- Frontend workspace supports Python/C/C++/Java execution paths.
+
+### In Progress
+
+- Production frontend environment alignment to Azure API URL.
+- Problem catalog pagination rollout (`page`, `limit`, `total`) across API and UI.
+- End-to-end analysis UX polish (session timeline and recommendations).
+
+### Current Priority
+
+- Remove dependency on legacy Render backend for production traffic.
+- Stabilize auth session sync and problems API path on one backend target.
+- Add release smoke tests for auth -> problems -> run -> submit -> analyze.
+
 ## 2. Scope Definition
 
 ### 2.1 In Scope (MVP)

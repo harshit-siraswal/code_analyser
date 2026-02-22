@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { type FormEventHandler, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiFetch } from "../lib/api";
 
@@ -13,14 +13,21 @@ type ProblemSummary = {
 
 type ProblemsResponse = {
   problems: ProblemSummary[];
+  total?: number;
+  page?: number;
+  limit?: number;
 };
 
 const difficultyOptions: Array<"All" | "Easy" | "Medium" | "Hard"> = ["All", "Easy", "Medium", "Hard"];
+const PAGE_SIZE = 20;
 
 export function ProblemsPage() {
   const [problems, setProblems] = useState<ProblemSummary[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [queryInput, setQueryInput] = useState("");
   const [query, setQuery] = useState("");
   const [difficulty, setDifficulty] = useState<(typeof difficultyOptions)[number]>("All");
 
@@ -32,9 +39,33 @@ export function ProblemsPage() {
       setError(null);
 
       try {
-        const response = await apiFetch<ProblemsResponse>("/problems");
+        const params = new URLSearchParams({
+          page: String(page),
+          limit: String(PAGE_SIZE)
+        });
+
+        if (query) {
+          params.set("search", query);
+        }
+
+        const response = await apiFetch<ProblemsResponse>(`/problems?${params.toString()}`);
+
+        let nextProblems = response.problems;
+        let nextTotal = typeof response.total === "number" ? response.total : response.problems.length;
+
+        // Compatibility fallback for environments still returning full list responses.
+        if (
+          (typeof response.page !== "number" || typeof response.limit !== "number") &&
+          nextProblems.length > PAGE_SIZE
+        ) {
+          const start = (page - 1) * PAGE_SIZE;
+          nextTotal = nextProblems.length;
+          nextProblems = nextProblems.slice(start, start + PAGE_SIZE);
+        }
+
         if (isMounted) {
-          setProblems(response.problems);
+          setProblems(nextProblems);
+          setTotal(nextTotal);
         }
       } catch (err) {
         if (isMounted) {
@@ -52,7 +83,7 @@ export function ProblemsPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [page, query]);
 
   const filtered = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -72,6 +103,20 @@ export function ProblemsPage() {
     });
   }, [difficulty, problems, query]);
 
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  const submitSearch: FormEventHandler<HTMLFormElement> = (event) => {
+    event.preventDefault();
+    setPage(1);
+    setQuery(queryInput.trim());
+  };
+
+  const clearSearch = () => {
+    setPage(1);
+    setQueryInput("");
+    setQuery("");
+  };
+
   return (
     <main className="page problems-catalog-page">
       <header className="section-head catalog-head">
@@ -83,13 +128,13 @@ export function ProblemsPage() {
         </p>
       </header>
 
-      <section className="catalog-controls card">
+      <form className="catalog-controls card" onSubmit={submitSearch}>
         <label className="catalog-input">
           <span>Search</span>
           <input
             type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            value={queryInput}
+            onChange={(event) => setQueryInput(event.target.value)}
             placeholder="Search by title, summary, or concept"
           />
         </label>
@@ -104,13 +149,24 @@ export function ProblemsPage() {
             ))}
           </select>
         </label>
-      </section>
+
+        <div className="catalog-action-row">
+          <button type="submit" className="ghost-btn compact">
+            Search
+          </button>
+          <button type="button" className="ghost-btn compact" onClick={clearSearch}>
+            Clear
+          </button>
+        </div>
+      </form>
 
       {loading ? <p className="status-text">Loading problems...</p> : null}
       {error ? <p className="error-text">{error}</p> : null}
+      {!loading && !error ? <p className="catalog-meta">Showing {filtered.length} of {total} problems</p> : null}
 
       {!loading && !error ? (
-        <section className="problem-grid catalog-grid">
+        <>
+          <section className="problem-grid catalog-grid">
           {filtered.length === 0 ? (
             <article className="card">
               <h2>No matching problems</h2>
@@ -138,7 +194,30 @@ export function ProblemsPage() {
               </Link>
             </article>
           ))}
-        </section>
+          </section>
+
+          <section className="catalog-pagination">
+            <button
+              type="button"
+              className="ghost-btn compact"
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              disabled={page <= 1}
+            >
+              Previous
+            </button>
+            <p>
+              Page {page} of {totalPages}
+            </p>
+            <button
+              type="button"
+              className="ghost-btn compact"
+              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+              disabled={page >= totalPages}
+            >
+              Next
+            </button>
+          </section>
+        </>
       ) : null}
     </main>
   );
