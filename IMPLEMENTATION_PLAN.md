@@ -16,7 +16,7 @@ Build and launch the MVP of the Deep Analysis coding practice platform in 12 wee
 - Analysis UI (summary, concept breakdown, timeline, diff)
 - Basic progress dashboard
 
-## 1.1 Execution Status Update (February 22, 2026)
+## 1.1 Execution Status Update (February 23, 2026)
 
 ### Completed
 
@@ -34,12 +34,16 @@ Build and launch the MVP of the Deep Analysis coding practice platform in 12 wee
   - repeated edit hotspots (line-level)
   - weak-topic practice suggestions (Easy/Medium/Hard)
 - Problem concept tagging now has inference fallback in export/import/API paths for better analysis context.
+- Workspace full-screen mode now preserves terminal and result panels (run/submit/analysis) for end-to-end debugging.
+- Problem statement example parsing now handles APPS mixed `Input/Output` formatting more robustly.
+- Header controls now use icon-based theme/signout actions for cleaner UX.
 
 ### In Progress
 
 - Production frontend environment alignment to Azure API URL.
 - End-to-end validation in production after latest API/UI deployments.
 - Validation and tuning of new analysis heuristics on real multi-language attempt sessions.
+- Validation after backend Judge0 verdict patch rollout to confirm false `Internal Error` regressions are resolved.
 
 ### Current Priority
 

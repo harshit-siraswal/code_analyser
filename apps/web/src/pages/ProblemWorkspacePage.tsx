@@ -452,35 +452,42 @@ function parseProblemDescription(rawDescription: string): ParsedProblemDescripti
 }
 
 function parseExamplesFromStatement(rawExamplesText: string): ParsedStatementExample[] {
-  const source = rawExamplesText.trim();
+  const source = rawExamplesText.replace(/\r\n/g, "\n").trim();
   if (!source) {
     return [];
   }
 
-  const chunkRegex = /Input\s*:?\s*([\s\S]*?)\n\s*Output\s*:?\s*([\s\S]*?)(?=\n\s*Input\s*:?\s*|$)/gi;
-  const parsed: ParsedStatementExample[] = [];
+  const parsed = new Map<string, ParsedStatementExample>();
+  const patterns = [
+    /Input\s*:?\s*([\s\S]*?)\n\s*Output\s*:?\s*([\s\S]*?)(?=\n\s*Input\s*:?\s*|$)/gi,
+    /Input\s*:?\s*([\s\S]*?)\s+Output\s*:?\s*([\s\S]*?)(?=\s+Input\s*:?\s*|$)/gi
+  ];
 
-  for (const match of source.matchAll(chunkRegex)) {
-    const rawInput = (match[1] ?? "").trim();
-    const rawOutput = (match[2] ?? "").trim();
-    if (!rawInput || !rawOutput) {
-      continue;
-    }
-
-    const explanationMatch = rawOutput.match(/([\s\S]*?)\n\s*Explanation\s*:?\s*([\s\S]*)$/i);
-    if (explanationMatch) {
-      const output = (explanationMatch[1] ?? "").trim();
-      const explanation = (explanationMatch[2] ?? "").trim();
-      if (output) {
-        parsed.push({ input: rawInput, output, explanation: explanation || undefined });
+  for (const pattern of patterns) {
+    for (const match of source.matchAll(pattern)) {
+      const rawInput = (match[1] ?? "").trim();
+      const rawOutput = (match[2] ?? "").trim();
+      if (!rawInput || !rawOutput) {
+        continue;
       }
-      continue;
-    }
 
-    parsed.push({ input: rawInput, output: rawOutput });
+      const explanationMatch = rawOutput.match(/([\s\S]*?)\n\s*Explanation\s*:?\s*([\s\S]*)$/i);
+      if (explanationMatch) {
+        const output = (explanationMatch[1] ?? "").trim();
+        const explanation = (explanationMatch[2] ?? "").trim();
+        if (output) {
+          const key = `${rawInput}__${output}`;
+          parsed.set(key, { input: rawInput, output, explanation: explanation || undefined });
+        }
+        continue;
+      }
+
+      const key = `${rawInput}__${rawOutput}`;
+      parsed.set(key, { input: rawInput, output: rawOutput });
+    }
   }
 
-  return parsed;
+  return [...parsed.values()];
 }
 
 export function ProblemWorkspacePage() {
@@ -644,7 +651,7 @@ export function ProblemWorkspacePage() {
     return parseProblemDescription(problem.description);
   }, [problem]);
 
-  const displayExamples = useMemo(() => {
+  const displayExamples = useMemo<ProblemExample[]>(() => {
     if (!problem) {
       return [] as ProblemExample[];
     }
@@ -652,6 +659,14 @@ export function ProblemWorkspacePage() {
     const fromStatement = parseExamplesFromStatement(parsedDescription.examplesText);
     if (fromStatement.length > 0) {
       return fromStatement;
+    }
+
+    if (problem.visibleTests.length > 0) {
+      return problem.visibleTests.slice(0, 2).map((test) => ({
+        input: test.input,
+        output: test.expectedOutput,
+        explanation: undefined
+      }));
     }
 
     return problem.examples;
@@ -1143,21 +1158,19 @@ export function ProblemWorkspacePage() {
               aria-label="Code editor"
             />
 
-            {!focusMode ? (
-              <section className="workspace-terminal">
-                <header className="workspace-terminal-head">
-                  <h4>Terminal</h4>
-                  <p>{selectedLanguage?.name ?? "Language unavailable"}</p>
-                </header>
-                <pre>{terminalLines.join("\n")}</pre>
-              </section>
-            ) : null}
+            <section className="workspace-terminal">
+              <header className="workspace-terminal-head">
+                <h4>Terminal</h4>
+                <p>{selectedLanguage?.name ?? "Language unavailable"}</p>
+              </header>
+              <pre>{terminalLines.join("\n")}</pre>
+            </section>
 
             {runError ? <p className="error-text">{runError}</p> : null}
             {submitError ? <p className="error-text">{submitError}</p> : null}
             {analysisError ? <p className="error-text">{analysisError}</p> : null}
 
-            {!focusMode && runResult ? (
+            {runResult ? (
               <section className="workspace-results">
                 <header className="workspace-results-head">
                   <h3>
@@ -1203,7 +1216,7 @@ export function ProblemWorkspacePage() {
               </section>
             ) : null}
 
-            {!focusMode && submitResult ? (
+            {submitResult ? (
               <section className="workspace-results submit-results">
                 <header className="workspace-results-head">
                   <h3>
@@ -1259,7 +1272,7 @@ export function ProblemWorkspacePage() {
               </section>
             ) : null}
 
-            {!focusMode && analysisResult ? (
+            {analysisResult ? (
               <section className="workspace-results analysis-results">
                 <header className="workspace-results-head">
                   <h3>AI Analysis</h3>

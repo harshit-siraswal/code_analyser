@@ -35,7 +35,16 @@ function AppShell() {
               aria-label="Sign out"
               onClick={() => void signOutUser()}
             >
-              <span aria-hidden="true">⎋</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M10 5H5.5A1.5 1.5 0 0 0 4 6.5v11A1.5 1.5 0 0 0 5.5 19H10M15 16l5-4-5-4M20 12H9"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.8"
+                />
+              </svg>
             </button>
           </div>
         </div>

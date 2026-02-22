@@ -19,6 +19,9 @@ Last updated: February 23, 2026
   - weak-topic practice suggestions (Easy/Medium/Hard)
 - [x] API now sends `problem_concepts` context to analysis-service for stronger topic-level feedback.
 - [x] Problem concept inference is integrated for APPS export/import and API fallback normalization.
+- [x] Workspace full-screen now keeps terminal + run/submit/analysis result sections visible.
+- [x] Statement example parser now handles APPS inline/newline `Input/Output` formats more reliably.
+- [x] Theme + signout controls switched to icon actions in top bars.
 
 ## 2. Blocking Issues To Resolve First
 
@@ -51,6 +54,7 @@ Last updated: February 23, 2026
 - [ ] Confirm `/api/v1/problems` shows imported problem set in UI.
 - [ ] Confirm dashboard is fed from backend data, not static fallback.
 - [ ] Confirm run/submit works in each supported language option.
+- [ ] Validate visible tests for APPS problems no longer show blanket `Internal Error` once latest backend image is live.
 - [ ] Confirm analysis render path shows new diagnostics/mastery/hotspot/practice sections from real sessions.
 
 ## 4. Next Engineering Work
