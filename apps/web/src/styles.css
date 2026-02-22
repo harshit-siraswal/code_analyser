@@ -561,6 +561,28 @@ button {
   gap: 10px;
 }
 
+.topbar-icon-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-action-btn {
+  width: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
+  border-radius: 999px;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.icon-action-btn.compact {
+  width: 36px;
+  min-width: 36px;
+  min-height: 36px;
+}
+
 .user-email {
   color: #5d6d65;
   font-size: 0.9rem;
@@ -2240,6 +2262,82 @@ button {
   font-size: 0.83rem;
 }
 
+.dashboard-monthly-report {
+  margin-top: 14px;
+  border: 1px solid #d8e2db;
+}
+
+.dashboard-monthly-report h2 {
+  margin: 0;
+  font-family: "Instrument Serif", Georgia, serif;
+  color: #13241c;
+}
+
+.dashboard-monthly-report > header p {
+  margin: 6px 0 0;
+  color: #55675f;
+}
+
+.dashboard-monthly-grid {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dashboard-monthly-card {
+  border: 1px solid #d8e2db;
+  border-radius: 12px;
+  background: #fbfefc;
+  padding: 12px;
+}
+
+.dashboard-monthly-card h3 {
+  margin: 0;
+  color: #1d3027;
+  font-size: 1rem;
+}
+
+.dashboard-monthly-card ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: #566a61;
+}
+
+.dashboard-monthly-card li + li {
+  margin-top: 5px;
+}
+
+.dashboard-swot-grid {
+  margin-top: 12px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dashboard-swot-card {
+  border: 1px solid #d8e2db;
+  border-radius: 12px;
+  background: #fbfefc;
+  padding: 12px;
+}
+
+.dashboard-swot-card h3 {
+  margin: 0;
+  color: #1d3027;
+  font-size: 1rem;
+}
+
+.dashboard-swot-card ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: #566a61;
+}
+
+.dashboard-swot-card li + li {
+  margin-top: 5px;
+}
+
 @keyframes rise-in {
   0% {
     opacity: 0;
@@ -2403,6 +2501,11 @@ button {
     grid-template-columns: 1fr;
   }
 
+  .dashboard-monthly-grid,
+  .dashboard-swot-grid {
+    grid-template-columns: 1fr;
+  }
+
   .dashboard-all-problems-item {
     grid-template-columns: 1fr;
   }
@@ -2552,6 +2655,13 @@ button {
 
   .dashboard-all-problems-item {
     padding: 11px;
+  }
+
+  .user-email {
+    max-width: 44vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
@@ -2852,4 +2962,88 @@ button {
 
 :root[data-theme="dark"] .analysis-diff-cell code {
   color: #dcefe5;
+}
+
+:root[data-theme="dark"] .dashboard-head {
+  border-color: #345045;
+  background:
+    radial-gradient(circle at 84% 0%, #224033 0%, transparent 38%),
+    linear-gradient(155deg, #122019 0%, #16251e 100%);
+}
+
+:root[data-theme="dark"] .dashboard-head p,
+:root[data-theme="dark"] .dashboard-kpi-card p,
+:root[data-theme="dark"] .dashboard-chart-card p,
+:root[data-theme="dark"] .dashboard-focus-card p,
+:root[data-theme="dark"] .dashboard-session-card p,
+:root[data-theme="dark"] .dashboard-all-problems > p,
+:root[data-theme="dark"] .dashboard-monthly-report > header p {
+  color: #a7c0b4;
+}
+
+:root[data-theme="dark"] .dashboard-kpi-card,
+:root[data-theme="dark"] .dashboard-session-item,
+:root[data-theme="dark"] .dashboard-all-problems-item,
+:root[data-theme="dark"] .dashboard-monthly-card,
+:root[data-theme="dark"] .dashboard-swot-card {
+  border-color: #365046;
+  background: #17241d;
+}
+
+:root[data-theme="dark"] .dashboard-kpi-card strong,
+:root[data-theme="dark"] .dashboard-chart-card h2,
+:root[data-theme="dark"] .dashboard-focus-card h2,
+:root[data-theme="dark"] .dashboard-session-card h2,
+:root[data-theme="dark"] .dashboard-session-item h3,
+:root[data-theme="dark"] .dashboard-all-problems-item h3,
+:root[data-theme="dark"] .dashboard-monthly-report h2,
+:root[data-theme="dark"] .dashboard-monthly-card h3,
+:root[data-theme="dark"] .dashboard-swot-card h3 {
+  color: #dcf1e6;
+}
+
+:root[data-theme="dark"] .dashboard-kpi-card span {
+  color: #93d1b5;
+}
+
+:root[data-theme="dark"] .dashboard-bar-col span,
+:root[data-theme="dark"] .dashboard-session-item p,
+:root[data-theme="dark"] .dashboard-all-problems-item p,
+:root[data-theme="dark"] .dashboard-monthly-card ul,
+:root[data-theme="dark"] .dashboard-swot-card ul {
+  color: #b2cabf;
+}
+
+:root[data-theme="dark"] .dashboard-session-meta .accepted {
+  color: #c3efda;
+  background: #1b3a2b;
+  border-color: #2d6b4d;
+}
+
+:root[data-theme="dark"] .dashboard-session-meta .review {
+  color: #f2c9bb;
+  background: #3b2b24;
+  border-color: #70483b;
+}
+
+:root[data-theme="dark"] .dashboard-all-problems-meta strong.solved {
+  color: #c3efda;
+  background: #1b3a2b;
+  border-color: #2d6b4d;
+}
+
+:root[data-theme="dark"] .dashboard-all-problems-meta strong.attempted {
+  color: #f2ddb4;
+  background: #3a3021;
+  border-color: #6f5f3b;
+}
+
+:root[data-theme="dark"] .dashboard-all-problems-meta strong.not_started {
+  color: #d4d0cb;
+  background: #2f2d2b;
+  border-color: #524f4c;
+}
+
+:root[data-theme="dark"] .dashboard-all-problems-meta a {
+  color: #95dfbd;
 }

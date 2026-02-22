@@ -39,6 +39,46 @@ type DashboardResponse = {
   }>;
 };
 
+type MonthlyReportResponse = {
+  month: string;
+  period: {
+    start: string;
+    end: string;
+  };
+  totals: {
+    attempts: number;
+    sessionsAnalyzed: number;
+    uniqueSessions: number;
+    problemsSolved: number;
+  };
+  topicShifts: Array<{
+    concept: string;
+    startConfidence: number;
+    endConfidence: number;
+    delta: number;
+    status: "improved" | "weakened" | "stable";
+    attempts: number;
+  }>;
+  mostPracticed: Array<{
+    concept: string;
+    attempts: number;
+  }>;
+  leastPracticed: Array<{
+    concept: string;
+    attempts: number;
+  }>;
+  transitions: {
+    weakToStrong: string[];
+    strongToWeak: string[];
+  };
+  swot: {
+    strengths: string[];
+    weaknesses: string[];
+    opportunities: string[];
+    threats: string[];
+  };
+};
+
 function toReadableLabel(value: string): string {
   return value
     .replace(/_/g, " ")
@@ -50,6 +90,7 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<DashboardResponse | null>(null);
+  const [monthlyReport, setMonthlyReport] = useState<MonthlyReportResponse | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -73,18 +114,25 @@ export function DashboardPage() {
           throw new Error("Could not read auth token.");
         }
 
-        const response = await apiFetch<DashboardResponse>("/dashboard/overview", {
-          token
-        });
+        const [overviewResponse, monthlyResponse] = await Promise.all([
+          apiFetch<DashboardResponse>("/dashboard/overview", {
+            token
+          }),
+          apiFetch<MonthlyReportResponse>("/dashboard/monthly-report", {
+            token
+          })
+        ]);
 
         if (!isMounted) {
           return;
         }
 
-        setData(response);
+        setData(overviewResponse);
+        setMonthlyReport(monthlyResponse);
       } catch (err) {
         if (isMounted) {
           setData(null);
+          setMonthlyReport(null);
           setError(err instanceof Error ? err.message : "Could not load dashboard.");
         }
       } finally {
@@ -100,6 +148,26 @@ export function DashboardPage() {
       isMounted = false;
     };
   }, [getIdToken, user]);
+
+  const improvedTopics = useMemo(() => {
+    if (!monthlyReport) {
+      return [];
+    }
+    return monthlyReport.topicShifts
+      .filter((topic) => topic.status === "improved")
+      .sort((left, right) => right.delta - left.delta)
+      .slice(0, 5);
+  }, [monthlyReport]);
+
+  const weakenedTopics = useMemo(() => {
+    if (!monthlyReport) {
+      return [];
+    }
+    return monthlyReport.topicShifts
+      .filter((topic) => topic.status === "weakened")
+      .sort((left, right) => left.delta - right.delta)
+      .slice(0, 5);
+  }, [monthlyReport]);
 
   const kpiItems = useMemo(() => {
     if (!data) {
@@ -240,6 +308,125 @@ export function DashboardPage() {
               )}
             </div>
           </section>
+
+          {monthlyReport ? (
+            <section className="card dashboard-monthly-report">
+              <header>
+                <h2>Monthly Learning Report ({monthlyReport.month})</h2>
+                <p>
+                  Attempts {monthlyReport.totals.attempts} | Sessions analyzed {monthlyReport.totals.sessionsAnalyzed}
+                </p>
+              </header>
+
+              <div className="dashboard-monthly-grid">
+                <article className="dashboard-monthly-card">
+                  <h3>Topics Improved</h3>
+                  {improvedTopics.length > 0 ? (
+                    <ul>
+                      {improvedTopics.map((topic) => (
+                        <li key={`improved-${topic.concept}`}>
+                          {toReadableLabel(topic.concept)} (+{Math.round(topic.delta * 100)} pts)
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="workspace-test-meta">No major topic improvements detected yet.</p>
+                  )}
+                </article>
+
+                <article className="dashboard-monthly-card">
+                  <h3>Topics Weakened</h3>
+                  {weakenedTopics.length > 0 ? (
+                    <ul>
+                      {weakenedTopics.map((topic) => (
+                        <li key={`weakened-${topic.concept}`}>
+                          {toReadableLabel(topic.concept)} ({Math.round(topic.delta * 100)} pts)
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="workspace-test-meta">No weakening trend detected this month.</p>
+                  )}
+                </article>
+
+                <article className="dashboard-monthly-card">
+                  <h3>Most Practiced</h3>
+                  {monthlyReport.mostPracticed.length > 0 ? (
+                    <ul>
+                      {monthlyReport.mostPracticed.map((topic) => (
+                        <li key={`most-${topic.concept}`}>
+                          {toReadableLabel(topic.concept)} ({topic.attempts} attempts)
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="workspace-test-meta">No practiced-topic data yet.</p>
+                  )}
+                </article>
+
+                <article className="dashboard-monthly-card">
+                  <h3>Least Practiced</h3>
+                  {monthlyReport.leastPracticed.length > 0 ? (
+                    <ul>
+                      {monthlyReport.leastPracticed.map((topic) => (
+                        <li key={`least-${topic.concept}`}>
+                          {toReadableLabel(topic.concept)} ({topic.attempts} attempts)
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="workspace-test-meta">No practiced-topic data yet.</p>
+                  )}
+                </article>
+              </div>
+
+              <div className="dashboard-swot-grid">
+                <article className="dashboard-swot-card">
+                  <h3>Strengths</h3>
+                  <ul>
+                    {(monthlyReport.swot.strengths.length > 0
+                      ? monthlyReport.swot.strengths
+                      : ["No clear strengths identified yet."]).map((item) => (
+                      <li key={`strength-${item}`}>{item}</li>
+                    ))}
+                  </ul>
+                </article>
+
+                <article className="dashboard-swot-card">
+                  <h3>Weaknesses</h3>
+                  <ul>
+                    {(monthlyReport.swot.weaknesses.length > 0
+                      ? monthlyReport.swot.weaknesses
+                      : ["No major weaknesses flagged."]).map((item) => (
+                      <li key={`weakness-${item}`}>{item}</li>
+                    ))}
+                  </ul>
+                </article>
+
+                <article className="dashboard-swot-card">
+                  <h3>Opportunities</h3>
+                  <ul>
+                    {(monthlyReport.swot.opportunities.length > 0
+                      ? monthlyReport.swot.opportunities
+                      : ["No specific opportunities generated yet."]).map((item) => (
+                      <li key={`opportunity-${item}`}>{item}</li>
+                    ))}
+                  </ul>
+                </article>
+
+                <article className="dashboard-swot-card">
+                  <h3>Threats</h3>
+                  <ul>
+                    {(monthlyReport.swot.threats.length > 0
+                      ? monthlyReport.swot.threats
+                      : ["No immediate threats detected."]).map((item) => (
+                      <li key={`threat-${item}`}>{item}</li>
+                    ))}
+                  </ul>
+                </article>
+              </div>
+            </section>
+          ) : null}
 
           <section className="card dashboard-all-problems">
             <header>

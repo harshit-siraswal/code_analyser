@@ -25,11 +25,19 @@ function AppShell() {
           <NavLink to="/dashboard">Dashboard</NavLink>
         </nav>
         <div className="topbar-actions">
-          <ThemeToggleButton compact />
           <span className="user-email">{user?.email}</span>
-          <button type="button" className="ghost-btn" onClick={() => void signOutUser()}>
-            Sign out
-          </button>
+          <div className="topbar-icon-actions">
+            <ThemeToggleButton compact />
+            <button
+              type="button"
+              className="ghost-btn icon-action-btn compact"
+              title="Sign out"
+              aria-label="Sign out"
+              onClick={() => void signOutUser()}
+            >
+              <span aria-hidden="true">⎋</span>
+            </button>
+          </div>
         </div>
       </header>
       <Outlet />

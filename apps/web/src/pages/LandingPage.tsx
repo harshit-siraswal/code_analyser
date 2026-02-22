@@ -50,7 +50,6 @@ export function LandingPage() {
         </Link>
 
         <div className="landing-nav-actions startup-nav-actions">
-          <ThemeToggleButton compact />
           {user ? (
             <>
               <Link className="link-pill" to="/problems">
@@ -59,12 +58,22 @@ export function LandingPage() {
               <Link className="link-pill" to="/dashboard">
                 Dashboard
               </Link>
-              <button type="button" className="ghost-btn compact" onClick={() => void signOutUser()}>
-                Sign out
-              </button>
+              <div className="topbar-icon-actions">
+                <ThemeToggleButton compact />
+                <button
+                  type="button"
+                  className="ghost-btn icon-action-btn compact"
+                  title="Sign out"
+                  aria-label="Sign out"
+                  onClick={() => void signOutUser()}
+                >
+                  <span aria-hidden="true">⎋</span>
+                </button>
+              </div>
             </>
           ) : (
             <>
+              <ThemeToggleButton compact />
               <Link className="link-pill" to="/login">
                 Sign in
               </Link>

@@ -275,6 +275,12 @@ type ParsedProblemDescription = {
   importNote: string | null;
 };
 
+type ParsedStatementExample = {
+  input: string;
+  output: string;
+  explanation?: string;
+};
+
 function buildDiffRows(previousCode: string, currentCode: string): DiffRow[] {
   const previousLines = previousCode.split("\n");
   const currentLines = currentCode.split("\n");
@@ -445,6 +451,38 @@ function parseProblemDescription(rawDescription: string): ParsedProblemDescripti
   };
 }
 
+function parseExamplesFromStatement(rawExamplesText: string): ParsedStatementExample[] {
+  const source = rawExamplesText.trim();
+  if (!source) {
+    return [];
+  }
+
+  const chunkRegex = /Input\s*:?\s*([\s\S]*?)\n\s*Output\s*:?\s*([\s\S]*?)(?=\n\s*Input\s*:?\s*|$)/gi;
+  const parsed: ParsedStatementExample[] = [];
+
+  for (const match of source.matchAll(chunkRegex)) {
+    const rawInput = (match[1] ?? "").trim();
+    const rawOutput = (match[2] ?? "").trim();
+    if (!rawInput || !rawOutput) {
+      continue;
+    }
+
+    const explanationMatch = rawOutput.match(/([\s\S]*?)\n\s*Explanation\s*:?\s*([\s\S]*)$/i);
+    if (explanationMatch) {
+      const output = (explanationMatch[1] ?? "").trim();
+      const explanation = (explanationMatch[2] ?? "").trim();
+      if (output) {
+        parsed.push({ input: rawInput, output, explanation: explanation || undefined });
+      }
+      continue;
+    }
+
+    parsed.push({ input: rawInput, output: rawOutput });
+  }
+
+  return parsed;
+}
+
 export function ProblemWorkspacePage() {
   const { slug } = useParams<{ slug: string }>();
   const { getIdToken } = useAuth();
@@ -605,6 +643,19 @@ export function ProblemWorkspacePage() {
 
     return parseProblemDescription(problem.description);
   }, [problem]);
+
+  const displayExamples = useMemo(() => {
+    if (!problem) {
+      return [] as ProblemExample[];
+    }
+
+    const fromStatement = parseExamplesFromStatement(parsedDescription.examplesText);
+    if (fromStatement.length > 0) {
+      return fromStatement;
+    }
+
+    return problem.examples;
+  }, [parsedDescription.examplesText, problem]);
 
   const topicMasteryRows = useMemo(() => {
     if (!analysisResult) {
@@ -1011,21 +1062,27 @@ export function ProblemWorkspacePage() {
 
             <section className="workspace-block">
               <h3>Examples</h3>
-              <div className="workspace-example-grid">
-                {problem.examples.map((example, index) => (
-                  <article key={`${example.input}-${index}`} className="workspace-example-card">
-                    <p className="workspace-test-meta">Input</p>
-                    <pre className="workspace-io-block">{formatIo(example.input)}</pre>
-                    <p className="workspace-test-meta">Output</p>
-                    <pre className="workspace-io-block">{formatIo(example.output)}</pre>
-                    {example.explanation ? (
-                      <p>
-                        <strong>Explanation:</strong> {example.explanation}
-                      </p>
-                    ) : null}
-                  </article>
-                ))}
-              </div>
+              {displayExamples.length > 0 ? (
+                <div className="workspace-example-grid">
+                  {displayExamples.map((example, index) => (
+                    <article key={`${example.input}-${index}`} className="workspace-example-card">
+                      <p className="workspace-test-meta">Input</p>
+                      <pre className="workspace-io-block">{formatIo(example.input)}</pre>
+                      <p className="workspace-test-meta">Output</p>
+                      <pre className="workspace-io-block">{formatIo(example.output)}</pre>
+                      {example.explanation ? (
+                        <p>
+                          <strong>Explanation:</strong> {example.explanation}
+                        </p>
+                      ) : null}
+                    </article>
+                  ))}
+                </div>
+              ) : parsedDescription.examplesText ? (
+                <pre className="workspace-description-block">{formatIo(parsedDescription.examplesText)}</pre>
+              ) : (
+                <p className="workspace-test-meta">No examples provided for this problem.</p>
+              )}
             </section>
           </article>
 
