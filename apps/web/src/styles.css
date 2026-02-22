@@ -1095,6 +1095,186 @@ button {
   font-weight: 700;
 }
 
+.analysis-diagnostics {
+  margin-top: 12px;
+  border: 1px solid #d7e4dc;
+  border-radius: 12px;
+  background: #fbfefc;
+  padding: 10px;
+}
+
+.analysis-diagnostics h4,
+.analysis-mastery h4,
+.analysis-weak-topics h4,
+.analysis-hotspots h4,
+.analysis-practice h4 {
+  margin: 0 0 8px;
+  font-family: "Instrument Serif", Georgia, serif;
+}
+
+.analysis-diagnostic-grid {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.analysis-diagnostic-grid article {
+  border: 1px solid #dce8df;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 8px;
+}
+
+.analysis-diagnostic-grid p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #5a605c;
+}
+
+.analysis-diagnostic-grid strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 1rem;
+  color: #1b5140;
+}
+
+.analysis-mastery {
+  margin-top: 12px;
+}
+
+.analysis-mastery-list {
+  display: grid;
+  gap: 10px;
+}
+
+.analysis-mastery-item {
+  border: 1px solid #d9e6df;
+  border-radius: 12px;
+  background: #fcfffd;
+  padding: 10px;
+}
+
+.analysis-mastery-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.analysis-mastery-head p {
+  margin: 0;
+  font-weight: 700;
+  color: #24483e;
+}
+
+.analysis-mastery-head span {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #4e655a;
+}
+
+.analysis-mastery-rail {
+  margin-top: 8px;
+  width: 100%;
+  height: 9px;
+  border-radius: 999px;
+  background: #e5efe8;
+  overflow: hidden;
+}
+
+.analysis-mastery-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #1e8d63 0%, #57c290 100%);
+}
+
+.analysis-weak-topics {
+  margin-top: 12px;
+}
+
+.analysis-weak-topic-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.analysis-weak-topic-card {
+  border: 1px solid #e7d8bf;
+  border-radius: 12px;
+  background: #fffdf6;
+  padding: 10px;
+}
+
+.analysis-weak-topic-card p {
+  margin: 5px 0 0;
+  color: #5f574b;
+  font-size: 0.84rem;
+}
+
+.analysis-hotspots {
+  margin-top: 12px;
+}
+
+.analysis-hotspot-list {
+  display: grid;
+  gap: 8px;
+}
+
+.analysis-hotspot-item {
+  border: 1px solid #d7e0da;
+  border-radius: 12px;
+  background: #fdfefe;
+  padding: 10px;
+}
+
+.analysis-hotspot-item p {
+  margin: 0;
+  color: #425b52;
+  font-size: 0.86rem;
+}
+
+.analysis-practice {
+  margin-top: 12px;
+}
+
+.analysis-practice-list {
+  display: grid;
+  gap: 10px;
+}
+
+.analysis-practice-group {
+  border: 1px solid #dce8e1;
+  border-radius: 12px;
+  background: #fbfefc;
+  padding: 10px;
+}
+
+.analysis-practice-cards {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.analysis-practice-card {
+  border: 1px solid #d8e5dd;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 8px;
+}
+
+.analysis-practice-card h5 {
+  margin: 2px 0 0;
+  font-size: 0.95rem;
+  color: #27443a;
+}
+
+.analysis-practice-card p {
+  margin: 6px 0 0;
+  color: #4f655a;
+  font-size: 0.82rem;
+}
+
 .workspace-page.focus-mode {
   max-width: none;
   width: 100%;
@@ -2132,6 +2312,14 @@ button {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .analysis-weak-topic-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .analysis-practice-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .dashboard-kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2220,6 +2408,15 @@ button {
   }
 
   .analysis-concepts {
+    grid-template-columns: 1fr;
+  }
+
+  .analysis-diagnostic-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .analysis-weak-topic-grid,
+  .analysis-practice-cards {
     grid-template-columns: 1fr;
   }
 

@@ -1,6 +1,6 @@
 # Your Action Items (Frontend + Platform Sync)
 
-Last updated: February 22, 2026
+Last updated: February 23, 2026
 
 ## 1. Current Status
 
@@ -11,6 +11,14 @@ Last updated: February 22, 2026
 - [x] Azure API and analysis services are running custom images (`prod2`).
 - [x] Dashboard session cards now deep-link into workspace analysis (`sessionId` + auto-load flow).
 - [x] Analysis payload can surface optional LLM mode metadata (Gemini-augmented vs heuristic).
+- [x] Session analysis now aggregates all attempts and surfaces:
+  - attempt diagnostics (syntax/logic/runtime rates + dominant pattern)
+  - topic mastery levels (Beginner/Intermediate/Advanced)
+  - weak-topic insights
+  - repeated edit hotspots (line-level)
+  - weak-topic practice suggestions (Easy/Medium/Hard)
+- [x] API now sends `problem_concepts` context to analysis-service for stronger topic-level feedback.
+- [x] Problem concept inference is integrated for APPS export/import and API fallback normalization.
 
 ## 2. Blocking Issues To Resolve First
 
@@ -43,12 +51,15 @@ Last updated: February 22, 2026
 - [ ] Confirm `/api/v1/problems` shows imported problem set in UI.
 - [ ] Confirm dashboard is fed from backend data, not static fallback.
 - [ ] Confirm run/submit works in each supported language option.
-- [x] Confirm analysis render path works from session payload.
+- [ ] Confirm analysis render path shows new diagnostics/mastery/hotspot/practice sections from real sessions.
 
 ## 4. Next Engineering Work
 
 - [x] Roll out paginated problem browsing with search and total count.
 - [x] Add richer analysis visualizations in dashboard/workspace.
+- [x] Add multi-attempt pattern diagnostics + weak-topic recommendations pipeline.
+- [ ] Backfill concept tags for older imported problems (one-time re-import/chunked refresh).
+- [ ] Add one-command chunked APPS import runner (safe resume for 1k+ growth).
 - [ ] Add API failure banners with explicit env-mismatch diagnostics.
 - [ ] Add smoke tests to release checklist.
 

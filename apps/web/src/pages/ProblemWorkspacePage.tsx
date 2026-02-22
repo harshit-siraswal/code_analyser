@@ -112,6 +112,41 @@ type AnalyzeResponse = {
     }>;
     recommendations: string[];
     timeComplexity: string | null;
+    topicMastery?: Array<{
+      topic: string;
+      understanding: number;
+      level: "Beginner" | "Intermediate" | "Advanced";
+      evidence?: string;
+    }>;
+    weakTopics?: Array<{
+      topic: string;
+      understanding: number;
+      reason: string;
+    }>;
+    editHotspots?: Array<{
+      line: number;
+      edits: number;
+      last_seen_attempt: number;
+      snippet?: string;
+    }>;
+    attemptDiagnostics?: {
+      syntax_issue_rate: number;
+      logic_issue_rate: number;
+      runtime_issue_rate: number;
+      dominant_issue: "syntax" | "logic" | "runtime" | "mixed" | "unknown";
+      recurring_pattern: string;
+    };
+    practiceSuggestions?: Array<{
+      topic: string;
+      problems: Array<{
+        id: number;
+        slug: string;
+        title: string;
+        difficulty: "Easy" | "Medium" | "Hard";
+        summary: string;
+        concepts: string[];
+      }>;
+    }>;
     analysisMode?: string;
     llmProvider?: string | null;
     createdAt: string;
@@ -439,6 +474,50 @@ export function ProblemWorkspacePage() {
     }
     return buildDiffRows(selectedLeftAttempt.code, selectedRightAttempt.code);
   }, [selectedLeftAttempt, selectedRightAttempt]);
+
+  const topicMasteryRows = useMemo(() => {
+    if (!analysisResult) {
+      return [] as Array<{
+        topic: string;
+        understanding: number;
+        level: "Beginner" | "Intermediate" | "Advanced";
+        evidence?: string;
+      }>;
+    }
+
+    if (analysisResult.topicMastery && analysisResult.topicMastery.length > 0) {
+      return analysisResult.topicMastery;
+    }
+
+    return Object.entries(analysisResult.conceptBreakdown).map(([topic, details]) => {
+      const confidence = Math.max(0, Math.min(1, details.confidence ?? 0));
+      return {
+        topic,
+        understanding: confidence,
+        level: confidence < 0.45 ? "Beginner" : confidence < 0.75 ? "Intermediate" : "Advanced",
+        evidence: "Derived from concept confidence."
+      };
+    });
+  }, [analysisResult]);
+
+  const weakTopicRows = useMemo(() => {
+    if (!analysisResult) {
+      return [] as Array<{ topic: string; understanding: number; reason: string }>;
+    }
+
+    if (analysisResult.weakTopics && analysisResult.weakTopics.length > 0) {
+      return analysisResult.weakTopics;
+    }
+
+    return [...topicMasteryRows]
+      .sort((left, right) => left.understanding - right.understanding)
+      .slice(0, 3)
+      .map((topic) => ({
+        topic: topic.topic,
+        understanding: topic.understanding,
+        reason: topic.evidence ?? "Low confidence from concept trend."
+      }));
+  }, [analysisResult, topicMasteryRows]);
 
   useEffect(() => {
     if (attemptSnapshots.length === 0) {
@@ -971,6 +1050,118 @@ export function ProblemWorkspacePage() {
                     </article>
                   ))}
                 </div>
+
+                {analysisResult.attemptDiagnostics ? (
+                  <section className="analysis-diagnostics">
+                    <h4>Attempt Diagnostics</h4>
+                    <p className="workspace-test-meta">
+                      Dominant issue: {toReadableLabel(analysisResult.attemptDiagnostics.dominant_issue)}
+                    </p>
+                    <p className="workspace-test-meta">
+                      {analysisResult.attemptDiagnostics.recurring_pattern}
+                    </p>
+                    <div className="analysis-diagnostic-grid">
+                      <article>
+                        <p>Syntax</p>
+                        <strong>{Math.round(analysisResult.attemptDiagnostics.syntax_issue_rate * 100)}%</strong>
+                      </article>
+                      <article>
+                        <p>Logic</p>
+                        <strong>{Math.round(analysisResult.attemptDiagnostics.logic_issue_rate * 100)}%</strong>
+                      </article>
+                      <article>
+                        <p>Runtime</p>
+                        <strong>{Math.round(analysisResult.attemptDiagnostics.runtime_issue_rate * 100)}%</strong>
+                      </article>
+                    </div>
+                  </section>
+                ) : null}
+
+                {topicMasteryRows.length > 0 ? (
+                  <section className="analysis-mastery">
+                    <h4>Topic Understanding</h4>
+                    <div className="analysis-mastery-list">
+                      {topicMasteryRows.map((topic) => (
+                        <article key={`mastery-${topic.topic}`} className="analysis-mastery-item">
+                          <div className="analysis-mastery-head">
+                            <p>{toReadableLabel(topic.topic)}</p>
+                            <span>
+                              {Math.round(topic.understanding * 100)}% - {topic.level}
+                            </span>
+                          </div>
+                          <div className="analysis-mastery-rail">
+                            <div
+                              className="analysis-mastery-fill"
+                              style={{ width: `${Math.round(topic.understanding * 100)}%` }}
+                            />
+                          </div>
+                          {topic.evidence ? <p className="workspace-test-meta">{topic.evidence}</p> : null}
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+                ) : null}
+
+                {weakTopicRows.length > 0 ? (
+                  <section className="analysis-weak-topics">
+                    <h4>Weak Topics Detected</h4>
+                    <div className="analysis-weak-topic-grid">
+                      {weakTopicRows.map((topic) => (
+                        <article key={`weak-${topic.topic}`} className="analysis-weak-topic-card">
+                          <p className="analysis-concept-name">{toReadableLabel(topic.topic)}</p>
+                          <p>Understanding: {Math.round(topic.understanding * 100)}%</p>
+                          <p className="workspace-test-meta">{topic.reason}</p>
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+                ) : null}
+
+                {analysisResult.editHotspots && analysisResult.editHotspots.length > 0 ? (
+                  <section className="analysis-hotspots">
+                    <h4>Repeated Edit Hotspots</h4>
+                    <div className="analysis-hotspot-list">
+                      {analysisResult.editHotspots.map((hotspot) => (
+                        <article key={`hotspot-${hotspot.line}`} className="analysis-hotspot-item">
+                          <p>
+                            Line {hotspot.line} edited {hotspot.edits} time(s)
+                          </p>
+                          <p className="workspace-test-meta">
+                            Last seen in attempt #{hotspot.last_seen_attempt}
+                          </p>
+                          {hotspot.snippet ? (
+                            <pre className="workspace-io-block">{hotspot.snippet}</pre>
+                          ) : null}
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+                ) : null}
+
+                {analysisResult.practiceSuggestions && analysisResult.practiceSuggestions.length > 0 ? (
+                  <section className="analysis-practice">
+                    <h4>Practice Next (Easy / Medium / Hard)</h4>
+                    <div className="analysis-practice-list">
+                      {analysisResult.practiceSuggestions.map((group) => (
+                        <article key={`practice-${group.topic}`} className="analysis-practice-group">
+                          <p className="analysis-concept-name">{toReadableLabel(group.topic)}</p>
+                          <div className="analysis-practice-cards">
+                            {group.problems.map((problem) => (
+                              <article key={`practice-problem-${problem.slug}`} className="analysis-practice-card">
+                                <p className="workspace-test-meta">{problem.difficulty}</p>
+                                <h5>{problem.title}</h5>
+                                <p>{problem.summary}</p>
+                                <Link to={`/problems/${problem.slug}`} className="ghost-btn compact">
+                                  Open
+                                </Link>
+                              </article>
+                            ))}
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+                ) : null}
 
                 <section className="analysis-recommendations">
                   <h4>Recommendations</h4>

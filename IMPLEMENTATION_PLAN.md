@@ -28,11 +28,18 @@ Build and launch the MVP of the Deep Analysis coding practice platform in 12 wee
 - Dashboard recent sessions now deep-link into workspace with session-aware analysis loading.
 - Analysis UI now shows mode metadata when backend provides LLM-augmented responses.
 - Problem list paging + difficulty query sync are implemented in UI contract.
+- Multi-attempt analysis now computes and returns:
+  - syntax/logic/runtime issue rates with dominant pattern
+  - topic mastery and weak-topic diagnostics
+  - repeated edit hotspots (line-level)
+  - weak-topic practice suggestions (Easy/Medium/Hard)
+- Problem concept tagging now has inference fallback in export/import/API paths for better analysis context.
 
 ### In Progress
 
 - Production frontend environment alignment to Azure API URL.
 - End-to-end validation in production after latest API/UI deployments.
+- Validation and tuning of new analysis heuristics on real multi-language attempt sessions.
 
 ### Current Priority
 
@@ -50,6 +57,10 @@ Build and launch the MVP of the Deep Analysis coding practice platform in 12 wee
 - FR-4.1 to FR-4.5 (attempt and session tracking)
 - FR-5.1 to FR-5.7 (rule-based analysis pipeline)
 - FR-6.1 to FR-6.6 (analysis visualization)
+- Extended analysis scope:
+  - cross-attempt issue pattern detection (syntax vs logic vs runtime)
+  - topic mastery confidence bars
+  - weak-topic targeted follow-up practice recommendations
 - FR-7.1 to FR-7.5 (basic dashboard and weak area tracking)
 
 ### 2.2 Deferred to Phase 2+
@@ -256,10 +267,12 @@ code_analyser_backend/             # backend repo
   - `GET /health`
 - Analysis modules:
   - AST concept detection (loops, conditionals, recursion, lists, strings, edge checks)
+  - language-agnostic textual topic signal heuristics for C/C++/Java/Python attempts
   - Consecutive attempt diff generation
   - Error classification mapping from Judge0 status
   - Time complexity heuristic rules
   - Summary and recommendation template engine
+  - Weak-topic extraction and edit-hotspot detection
 - API integration:
   - `POST /analysis/:sessionId`
   - `GET /analysis/:sessionId`
@@ -285,6 +298,9 @@ code_analyser_backend/             # backend repo
   - Side-by-side diff viewer
   - Complexity panel with suggested optimization
   - Recommendations panel
+  - Topic mastery bars (Beginner/Intermediate/Advanced)
+  - Attempt diagnostics (syntax/logic/runtime rates)
+  - Weak-topic and practice-next cards (Easy/Medium/Hard)
 - Dashboard:
   - Solved/attempted/bookmarked counters
   - Last 7 days activity feed
