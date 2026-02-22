@@ -47,6 +47,9 @@ export function ProblemsPage() {
         if (query) {
           params.set("search", query);
         }
+        if (difficulty !== "All") {
+          params.set("difficulty", difficulty);
+        }
 
         const response = await apiFetch<ProblemsResponse>(`/problems?${params.toString()}`);
 
@@ -141,7 +144,13 @@ export function ProblemsPage() {
 
         <label className="catalog-select">
           <span>Difficulty</span>
-          <select value={difficulty} onChange={(event) => setDifficulty(event.target.value as typeof difficulty)}>
+          <select
+            value={difficulty}
+            onChange={(event) => {
+              setPage(1);
+              setDifficulty(event.target.value as typeof difficulty);
+            }}
+          >
             {difficultyOptions.map((option) => (
               <option key={option} value={option}>
                 {option}

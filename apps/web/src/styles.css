@@ -872,6 +872,35 @@ button {
   font-weight: 600;
 }
 
+.workspace-language-picker {
+  display: grid;
+  gap: 4px;
+}
+
+.workspace-language-picker span {
+  color: #1f533d;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.workspace-language-picker select {
+  min-width: 210px;
+  min-height: 38px;
+  border: 1px solid #c7d7ce;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 7px 10px;
+  color: #224435;
+  font-weight: 600;
+}
+
+.workspace-language-picker select:focus {
+  outline: 2px solid #9fd3b8;
+  border-color: #559877;
+}
+
 .workspace-editor-actions {
   display: flex;
   gap: 8px;
@@ -896,6 +925,44 @@ button {
   background:
     radial-gradient(circle at 8% 8%, #3d4a53 0%, transparent 35%),
     linear-gradient(160deg, #1a2a2f 0%, #1d252a 70%);
+}
+
+.workspace-terminal {
+  border-top: 1px solid #2c3c40;
+  background:
+    radial-gradient(circle at 12% 8%, #344d55 0%, transparent 38%),
+    linear-gradient(165deg, #121f23 0%, #0d171b 72%);
+  color: #d4e7e8;
+  padding: 12px;
+}
+
+.workspace-terminal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.workspace-terminal-head h4 {
+  margin: 0;
+  font-family: "Instrument Serif", Georgia, serif;
+  color: #ecf8f4;
+  font-size: 1.02rem;
+}
+
+.workspace-terminal-head p {
+  margin: 0;
+  color: #8fbdaf;
+  font-size: 0.84rem;
+}
+
+.workspace-terminal pre {
+  margin: 10px 0 0;
+  max-height: 220px;
+  overflow: auto;
+  font: 500 0.78rem/1.55 "Consolas", "Menlo", monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .workspace-results {

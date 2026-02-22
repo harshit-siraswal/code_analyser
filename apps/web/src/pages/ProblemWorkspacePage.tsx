@@ -34,6 +34,15 @@ type ProblemDetailResponse = {
   problem: ProblemDetail;
 };
 
+type LanguageOption = {
+  id: number;
+  name: string;
+};
+
+type LanguagesResponse = {
+  languages: LanguageOption[];
+};
+
 type ExecutionTestResult = {
   id: string;
   note?: string;
@@ -108,6 +117,13 @@ type AnalyzeResponse = {
   attempts: SessionAttemptSnapshot[];
 };
 
+const FALLBACK_LANGUAGES: LanguageOption[] = [
+  { id: 71, name: "Python (3.x)" },
+  { id: 50, name: "C (GCC)" },
+  { id: 54, name: "C++ (GCC)" },
+  { id: 62, name: "Java (OpenJDK)" }
+];
+
 function toReadableLabel(key: string): string {
   return key
     .replace(/_/g, " ")
@@ -116,6 +132,88 @@ function toReadableLabel(key: string): string {
 
 function toReadableEnum(value: string): string {
   return toReadableLabel(value.toLowerCase());
+}
+
+function compactOutput(value: string | null): string {
+  if (!value) {
+    return "";
+  }
+  return value.trim().replace(/\s+/g, " ").slice(0, 240);
+}
+
+function buildStarterCode(problem: ProblemDetail, languageId: number): string {
+  if (languageId === 71) {
+    return problem.starterCode;
+  }
+
+  if (languageId === 50) {
+    return `#include <stdio.h>
+
+int main() {
+    // Read from stdin and print to stdout exactly as expected by tests.
+    return 0;
+}`;
+  }
+
+  if (languageId === 54) {
+    return `#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    // Read from stdin and print to stdout exactly as expected by tests.
+    return 0;
+}`;
+  }
+
+  if (languageId === 62) {
+    return `import java.io.*;
+
+public class Main {
+    public static void main(String[] args) throws Exception {
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        // Read input from br and print exact expected output.
+    }
+}`;
+  }
+
+  return problem.starterCode;
+}
+
+function formatTerminal(
+  action: "run" | "submit",
+  languageName: string,
+  payload: { overallStatus: string; passedCount: number; totalCount: number; tests: ExecutionTestResult[] }
+): string[] {
+  const lines = [
+    `$ ${action} --language "${languageName}"`,
+    `status: ${payload.overallStatus}`,
+    `passed: ${payload.passedCount}/${payload.totalCount}`,
+    ""
+  ];
+
+  for (const test of payload.tests.slice(0, 8)) {
+    lines.push(`${test.id}${test.isHidden ? " [hidden]" : ""}: ${test.statusDescription}`);
+
+    const stdout = compactOutput(test.stdout);
+    if (stdout) {
+      lines.push(`  stdout: ${stdout}`);
+    }
+
+    const stderr = compactOutput(test.stderr);
+    if (stderr) {
+      lines.push(`  stderr: ${stderr}`);
+    }
+
+    const compileOutput = compactOutput(test.compileOutput);
+    if (compileOutput) {
+      lines.push(`  compile: ${compileOutput}`);
+    }
+  }
+
+  return lines;
 }
 
 type DiffRow = {
@@ -194,6 +292,8 @@ export function ProblemWorkspacePage() {
   const { getIdToken } = useAuth();
   const [problem, setProblem] = useState<ProblemDetail | null>(null);
   const [code, setCode] = useState("");
+  const [languages, setLanguages] = useState<LanguageOption[]>(FALLBACK_LANGUAGES);
+  const [languageId, setLanguageId] = useState<number>(71);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -212,6 +312,9 @@ export function ProblemWorkspacePage() {
   const [attemptSnapshots, setAttemptSnapshots] = useState<SessionAttemptSnapshot[]>([]);
   const [leftAttemptId, setLeftAttemptId] = useState<number | null>(null);
   const [rightAttemptId, setRightAttemptId] = useState<number | null>(null);
+  const [terminalLines, setTerminalLines] = useState<string[]>([
+    "Terminal ready. Select a language and run visible tests."
+  ]);
 
   useEffect(() => {
     let isMounted = true;
@@ -229,14 +332,32 @@ export function ProblemWorkspacePage() {
       setAttemptSnapshots([]);
       setLeftAttemptId(null);
       setRightAttemptId(null);
+      setTerminalLines(["Terminal ready. Select a language and run visible tests."]);
 
       try {
-        const response = await apiFetch<ProblemDetailResponse>(`/problems/${nextSlug}`);
+        const problemPromise = apiFetch<ProblemDetailResponse>(`/problems/${nextSlug}`);
+        const languagesPromise = apiFetch<LanguagesResponse>("/languages").catch(() => ({
+          languages: FALLBACK_LANGUAGES
+        }));
+
+        const [problemResponse, languagesResponse] = await Promise.all([problemPromise, languagesPromise]);
         if (!isMounted) {
           return;
         }
-        setProblem(response.problem);
-        setCode(response.problem.starterCode);
+
+        const availableLanguages =
+          languagesResponse.languages.length > 0 ? languagesResponse.languages : FALLBACK_LANGUAGES;
+        const defaultLanguage =
+          availableLanguages.find((language) => language.id === 71) ?? availableLanguages[0];
+
+        if (!defaultLanguage) {
+          throw new Error("No supported language available.");
+        }
+
+        setLanguages(availableLanguages);
+        setLanguageId(defaultLanguage.id);
+        setProblem(problemResponse.problem);
+        setCode(buildStarterCode(problemResponse.problem, defaultLanguage.id));
       } catch (err) {
         if (isMounted) {
           setError(err instanceof Error ? err.message : "Could not load problem.");
@@ -259,6 +380,10 @@ export function ProblemWorkspacePage() {
       isMounted = false;
     };
   }, [slug]);
+
+  const selectedLanguage = useMemo(() => {
+    return languages.find((language) => language.id === languageId) ?? languages[0] ?? null;
+  }, [languageId, languages]);
 
   const flowSteps = useMemo(
     () => [
@@ -313,13 +438,17 @@ export function ProblemWorkspacePage() {
     setRunError(null);
 
     try {
+      const selectedLanguageName = selectedLanguage?.name ?? "Unknown";
       const response = await apiFetch<RunResponse>(`/problems/${problem.slug}/run`, {
         method: "POST",
-        body: { code }
+        body: { code, languageId }
       });
       setRunResult(response);
+      setTerminalLines(formatTerminal("run", selectedLanguageName, response));
     } catch (err) {
-      setRunError(err instanceof Error ? err.message : "Could not run tests.");
+      const message = err instanceof Error ? err.message : "Could not run tests.";
+      setRunError(message);
+      setTerminalLines([`$ run --language "${selectedLanguage?.name ?? "Unknown"}"`, `error: ${message}`]);
     } finally {
       setRunning(false);
     }
@@ -343,18 +472,21 @@ export function ProblemWorkspacePage() {
         ? await apiFetch<SubmitResponse>(`/problems/${problem.slug}/submit`, {
             method: "POST",
             token,
-            body: { code, sessionId }
+            body: { code, sessionId, languageId }
           })
         : await apiFetch<SubmitResponse>(`/problems/${problem.slug}/submit`, {
             method: "POST",
             token,
-            body: { code }
+            body: { code, languageId }
           });
 
       setSubmitResult(response);
       setSessionId(response.sessionId);
+      setTerminalLines(formatTerminal("submit", selectedLanguage?.name ?? "Unknown", response));
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Could not submit solution.");
+      const message = err instanceof Error ? err.message : "Could not submit solution.";
+      setSubmitError(message);
+      setTerminalLines([`$ submit --language "${selectedLanguage?.name ?? "Unknown"}"`, `error: ${message}`]);
     } finally {
       setSubmitting(false);
     }
@@ -382,8 +514,16 @@ export function ProblemWorkspacePage() {
       });
       setAnalysisResult(response.analysis);
       setAttemptSnapshots(response.attempts);
+      setTerminalLines([
+        `$ analyze --session ${sessionId}`,
+        `summary: ${response.analysis.summary}`,
+        `complexity: ${response.analysis.timeComplexity ?? "Unknown"}`,
+        `recommendations: ${response.analysis.recommendations.length}`
+      ]);
     } catch (err) {
-      setAnalysisError(err instanceof Error ? err.message : "Could not analyze session.");
+      const message = err instanceof Error ? err.message : "Could not analyze session.";
+      setAnalysisError(message);
+      setTerminalLines([`$ analyze --session ${sessionId}`, `error: ${message}`]);
     } finally {
       setAnalyzing(false);
     }
@@ -394,18 +534,38 @@ export function ProblemWorkspacePage() {
       return;
     }
 
-    setCode(problem.starterCode);
+    setCode(buildStarterCode(problem, languageId));
     setRunResult(null);
     setRunError(null);
-            setSubmitResult(null);
-            setSubmitError(null);
-            setSessionId(null);
-            setAnalysisResult(null);
-            setAnalysisError(null);
-            setAttemptSnapshots([]);
-            setLeftAttemptId(null);
-            setRightAttemptId(null);
-          }
+    setSubmitResult(null);
+    setSubmitError(null);
+    setSessionId(null);
+    setAnalysisResult(null);
+    setAnalysisError(null);
+    setAttemptSnapshots([]);
+    setLeftAttemptId(null);
+    setRightAttemptId(null);
+    setTerminalLines(["Starter template restored."]);
+  }
+
+  function onLanguageChange(nextLanguageId: number) {
+    setLanguageId(nextLanguageId);
+
+    if (!problem) {
+      return;
+    }
+
+    setCode(buildStarterCode(problem, nextLanguageId));
+    setRunResult(null);
+    setSubmitResult(null);
+    setAnalysisResult(null);
+    setAttemptSnapshots([]);
+    setLeftAttemptId(null);
+    setRightAttemptId(null);
+
+    const selected = languages.find((language) => language.id === nextLanguageId);
+    setTerminalLines([`Language switched to ${selected?.name ?? nextLanguageId}. Starter template loaded.`]);
+  }
 
   return (
     <main className="page workspace-page">
@@ -480,7 +640,19 @@ export function ProblemWorkspacePage() {
 
           <article className="workspace-editor-panel card">
             <div className="workspace-editor-toolbar">
-              <p>Language: Python</p>
+              <label className="workspace-language-picker">
+                <span>Language</span>
+                <select
+                  value={languageId}
+                  onChange={(event) => onLanguageChange(Number(event.target.value))}
+                >
+                  {languages.map((language) => (
+                    <option key={language.id} value={language.id}>
+                      {language.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <div className="workspace-editor-actions">
                 <button type="button" className="ghost-btn" onClick={onResetStarter}>
                   Reset Starter
@@ -519,6 +691,14 @@ export function ProblemWorkspacePage() {
               spellCheck={false}
               aria-label="Code editor"
             />
+
+            <section className="workspace-terminal">
+              <header className="workspace-terminal-head">
+                <h4>Terminal</h4>
+                <p>{selectedLanguage?.name ?? "Language unavailable"}</p>
+              </header>
+              <pre>{terminalLines.join("\n")}</pre>
+            </section>
 
             {runError ? <p className="error-text">{runError}</p> : null}
             {submitError ? <p className="error-text">{submitError}</p> : null}
