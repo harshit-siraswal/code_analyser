@@ -24,10 +24,22 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
   });
 
   if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || `API request failed: ${response.status}`);
+    const responseText = await response.text();
+    let parsedMessage: string | undefined;
+
+    try {
+      const payload = JSON.parse(responseText) as { message?: string };
+      parsedMessage = payload.message;
+    } catch {
+      // Fall back to raw text.
+    }
+
+    if (parsedMessage) {
+      throw new Error(parsedMessage);
+    }
+
+    throw new Error(responseText || `API request failed: ${response.status}`);
   }
 
   return response.json() as Promise<T>;
 }
-

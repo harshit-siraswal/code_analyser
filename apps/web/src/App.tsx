@@ -5,6 +5,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { ProblemWorkspacePage } from "./pages/ProblemWorkspacePage";
 import { ProblemsPage } from "./pages/ProblemsPage";
 import { RegisterPage } from "./pages/RegisterPage";
 
@@ -47,6 +48,7 @@ export function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppShell />}>
           <Route path="/problems" element={<ProblemsPage />} />
+          <Route path="/problems/:slug" element={<ProblemWorkspacePage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
         </Route>
       </Route>
