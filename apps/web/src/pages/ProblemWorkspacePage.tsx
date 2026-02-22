@@ -656,17 +656,17 @@ export function ProblemWorkspacePage() {
       return [] as ProblemExample[];
     }
 
-    const fromStatement = parseExamplesFromStatement(parsedDescription.examplesText);
-    if (fromStatement.length > 0) {
-      return fromStatement;
-    }
-
     if (problem.visibleTests.length > 0) {
       return problem.visibleTests.slice(0, 2).map((test) => ({
         input: test.input,
         output: test.expectedOutput,
         explanation: undefined
       }));
+    }
+
+    const fromStatement = parseExamplesFromStatement(parsedDescription.examplesText);
+    if (fromStatement.length > 0) {
+      return fromStatement;
     }
 
     return problem.examples;
@@ -1027,19 +1027,7 @@ export function ProblemWorkspacePage() {
               ) : null}
               {parsedDescription.source ? (
                 <p className="workspace-problem-source">
-                  Source:{" "}
-                  {parsedDescription.source.startsWith("http") ? (
-                    <a
-                      href={parsedDescription.source}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="workspace-source-link"
-                    >
-                      {parsedDescription.source}
-                    </a>
-                  ) : (
-                    parsedDescription.source
-                  )}
+                  Source: {parsedDescription.source}
                 </p>
               ) : null}
             </div>

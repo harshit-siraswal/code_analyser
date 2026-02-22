@@ -3052,3 +3052,76 @@ button {
 :root[data-theme="dark"] .dashboard-all-problems-meta a {
   color: #95dfbd;
 }
+
+/* Dark-theme overrides for startup/fintech landing containers */
+:root[data-theme="dark"] .fintech-theme .startup-hero-copy {
+  border-color: #355246;
+  background:
+    radial-gradient(circle at 12% 6%, #20382d 0%, transparent 38%),
+    radial-gradient(circle at 88% 0%, #1b2f27 0%, transparent 34%),
+    linear-gradient(152deg, #111c17 0%, #162520 78%);
+  box-shadow: 0 28px 46px #02080666;
+}
+
+:root[data-theme="dark"] .fintech-theme .startup-hero-copy::after {
+  border-color: #395548;
+  background: linear-gradient(140deg, #1a2b23, #15211c);
+  box-shadow: 0 10px 20px #02080680;
+}
+
+:root[data-theme="dark"] .fintech-theme .startup-hero-copy h1,
+:root[data-theme="dark"] .fintech-theme .startup-section-head h2,
+:root[data-theme="dark"] .fintech-theme .startup-final-cta h2 {
+  color: #e3f2ea;
+}
+
+:root[data-theme="dark"] .fintech-theme .startup-subtitle,
+:root[data-theme="dark"] .fintech-theme .startup-final-cta p {
+  color: #acc4b8;
+}
+
+:root[data-theme="dark"] .fintech-theme .startup-mini-card,
+:root[data-theme="dark"] .fintech-theme .startup-feature-card,
+:root[data-theme="dark"] .fintech-theme .startup-step-card {
+  border-color: #355046;
+  background: #16231d;
+  box-shadow: 0 10px 20px #00000033;
+}
+
+:root[data-theme="dark"] .fintech-theme .startup-mini-card strong {
+  color: #dff0e7;
+}
+
+:root[data-theme="dark"] .fintech-theme .startup-mini-card span,
+:root[data-theme="dark"] .fintech-theme .startup-feature-card p,
+:root[data-theme="dark"] .fintech-theme .startup-step-card p {
+  color: #afc6ba;
+}
+
+:root[data-theme="dark"] .fintech-theme .startup-trust-strip {
+  border-color: #365046;
+  background: #131f19;
+}
+
+:root[data-theme="dark"] .fintech-theme .startup-trust-strip p {
+  color: #b0c7bc;
+}
+
+:root[data-theme="dark"] .fintech-theme .startup-features,
+:root[data-theme="dark"] .fintech-theme .startup-workflow,
+:root[data-theme="dark"] .fintech-theme .startup-testimonials {
+  border-color: #355046;
+  background: #121f19;
+  box-shadow: 0 14px 30px #00000033;
+}
+
+:root[data-theme="dark"] .fintech-theme .startup-step-phase {
+  color: #8fd4b4;
+}
+
+:root[data-theme="dark"] .fintech-theme .startup-final-cta {
+  border-color: #365146;
+  background:
+    radial-gradient(circle at 80% 0%, #243d31 0%, transparent 36%),
+    linear-gradient(148deg, #111c17 0%, #16231d 76%);
+}
