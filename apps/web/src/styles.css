@@ -977,6 +977,142 @@ button {
   margin-top: 6px;
 }
 
+.analysis-timeline {
+  margin-top: 14px;
+}
+
+.analysis-timeline h4,
+.analysis-diff h4 {
+  margin: 0 0 8px;
+  font-family: "Instrument Serif", Georgia, serif;
+}
+
+.analysis-timeline-list {
+  display: grid;
+  gap: 10px;
+}
+
+.analysis-timeline-item {
+  border: 1px solid #d7e2de;
+  border-radius: 12px;
+  background: #fdfefe;
+  padding: 10px;
+}
+
+.analysis-timeline-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.analysis-timeline-head p {
+  margin: 0;
+  font-weight: 700;
+  color: #2b3f42;
+}
+
+.analysis-timeline-head span {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #235766;
+}
+
+.analysis-diff {
+  margin-top: 14px;
+}
+
+.analysis-diff-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.analysis-diff-controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.analysis-diff-controls label {
+  display: grid;
+  gap: 4px;
+  font-size: 0.82rem;
+  color: #35555f;
+}
+
+.analysis-diff-controls select {
+  min-width: 120px;
+  border: 1px solid #cfded7;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  background: #ffffff;
+}
+
+.analysis-diff-table {
+  margin-top: 8px;
+  border: 1px solid #ced9d2;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.analysis-diff-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid #e4ece8;
+}
+
+.analysis-diff-row:first-child {
+  border-top: 0;
+}
+
+.analysis-diff-row.same {
+  background: #fcfefd;
+}
+
+.analysis-diff-row.added {
+  background: #ebfff4;
+}
+
+.analysis-diff-row.removed {
+  background: #fff2f2;
+}
+
+.analysis-diff-row.changed {
+  background: #fff9eb;
+}
+
+.analysis-diff-cell {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  padding: 7px 10px;
+}
+
+.analysis-diff-cell + .analysis-diff-cell {
+  border-left: 1px solid #dbe6df;
+}
+
+.analysis-diff-cell span {
+  color: #6d7f77;
+  font-size: 0.78rem;
+  text-align: right;
+  padding-top: 2px;
+}
+
+.analysis-diff-cell code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: 500 0.78rem/1.55 "Consolas", "Menlo", monospace;
+  color: #273539;
+}
+
 .problem-difficulty {
   display: inline-block;
   margin-bottom: 8px !important;
@@ -1820,6 +1956,28 @@ button {
 
   .analysis-concepts {
     grid-template-columns: 1fr;
+  }
+
+  .analysis-diff-head {
+    align-items: stretch;
+  }
+
+  .analysis-diff-controls {
+    width: 100%;
+  }
+
+  .analysis-diff-controls label {
+    flex: 1;
+    min-width: 130px;
+  }
+
+  .analysis-diff-row {
+    grid-template-columns: 1fr;
+  }
+
+  .analysis-diff-cell + .analysis-diff-cell {
+    border-left: 0;
+    border-top: 1px solid #dbe6df;
   }
 
   .workspace-editor-actions {

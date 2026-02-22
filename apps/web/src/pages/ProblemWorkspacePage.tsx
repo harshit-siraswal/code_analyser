@@ -78,6 +78,14 @@ type SubmitResponse = {
   };
 };
 
+type SessionAttemptSnapshot = {
+  id: number;
+  code: string;
+  status: string;
+  errorType: string | null;
+  submittedAt: string;
+};
+
 type AnalyzeResponse = {
   analysis: {
     id: number;
@@ -89,17 +97,96 @@ type AnalyzeResponse = {
       status: string;
       error_type: string | null;
       submitted_at: string | null;
+      lines_added?: number;
+      lines_removed?: number;
+      change_summary?: string;
     }>;
     recommendations: string[];
     timeComplexity: string | null;
     createdAt: string;
   };
+  attempts: SessionAttemptSnapshot[];
 };
 
 function toReadableLabel(key: string): string {
   return key
     .replace(/_/g, " ")
     .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function toReadableEnum(value: string): string {
+  return toReadableLabel(value.toLowerCase());
+}
+
+type DiffRow = {
+  leftNumber: number | null;
+  rightNumber: number | null;
+  leftText: string;
+  rightText: string;
+  kind: "same" | "added" | "removed" | "changed";
+};
+
+function buildDiffRows(previousCode: string, currentCode: string): DiffRow[] {
+  const previousLines = previousCode.split("\n");
+  const currentLines = currentCode.split("\n");
+
+  const rows: DiffRow[] = [];
+  let previousIndex = 0;
+  let currentIndex = 0;
+
+  while (previousIndex < previousLines.length || currentIndex < currentLines.length) {
+    const previousLine = previousLines[previousIndex];
+    const currentLine = currentLines[currentIndex];
+
+    if (previousLine === currentLine) {
+      rows.push({
+        leftNumber: previousIndex + 1,
+        rightNumber: currentIndex + 1,
+        leftText: previousLine ?? "",
+        rightText: currentLine ?? "",
+        kind: "same"
+      });
+      previousIndex += 1;
+      currentIndex += 1;
+      continue;
+    }
+
+    if (previousLines[previousIndex + 1] === currentLine) {
+      rows.push({
+        leftNumber: previousIndex + 1,
+        rightNumber: null,
+        leftText: previousLine ?? "",
+        rightText: "",
+        kind: "removed"
+      });
+      previousIndex += 1;
+      continue;
+    }
+
+    if (previousLine === currentLines[currentIndex + 1]) {
+      rows.push({
+        leftNumber: null,
+        rightNumber: currentIndex + 1,
+        leftText: "",
+        rightText: currentLine ?? "",
+        kind: "added"
+      });
+      currentIndex += 1;
+      continue;
+    }
+
+    rows.push({
+      leftNumber: previousIndex < previousLines.length ? previousIndex + 1 : null,
+      rightNumber: currentIndex < currentLines.length ? currentIndex + 1 : null,
+      leftText: previousLine ?? "",
+      rightText: currentLine ?? "",
+      kind: "changed"
+    });
+    previousIndex += previousIndex < previousLines.length ? 1 : 0;
+    currentIndex += currentIndex < currentLines.length ? 1 : 0;
+  }
+
+  return rows;
 }
 
 export function ProblemWorkspacePage() {
@@ -122,6 +209,9 @@ export function ProblemWorkspacePage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<AnalyzeResponse["analysis"] | null>(null);
+  const [attemptSnapshots, setAttemptSnapshots] = useState<SessionAttemptSnapshot[]>([]);
+  const [leftAttemptId, setLeftAttemptId] = useState<number | null>(null);
+  const [rightAttemptId, setRightAttemptId] = useState<number | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -136,6 +226,9 @@ export function ProblemWorkspacePage() {
       setSessionId(null);
       setAnalysisError(null);
       setAnalysisResult(null);
+      setAttemptSnapshots([]);
+      setLeftAttemptId(null);
+      setRightAttemptId(null);
 
       try {
         const response = await apiFetch<ProblemDetailResponse>(`/problems/${nextSlug}`);
@@ -177,6 +270,39 @@ export function ProblemWorkspacePage() {
     ],
     [analysisResult, code, runResult, submitResult]
   );
+
+  const selectedLeftAttempt = useMemo(
+    () => attemptSnapshots.find((attempt) => attempt.id === leftAttemptId) ?? null,
+    [attemptSnapshots, leftAttemptId]
+  );
+  const selectedRightAttempt = useMemo(
+    () => attemptSnapshots.find((attempt) => attempt.id === rightAttemptId) ?? null,
+    [attemptSnapshots, rightAttemptId]
+  );
+  const diffRows = useMemo(() => {
+    if (!selectedLeftAttempt || !selectedRightAttempt) {
+      return [];
+    }
+    return buildDiffRows(selectedLeftAttempt.code, selectedRightAttempt.code);
+  }, [selectedLeftAttempt, selectedRightAttempt]);
+
+  useEffect(() => {
+    if (attemptSnapshots.length === 0) {
+      setLeftAttemptId(null);
+      setRightAttemptId(null);
+      return;
+    }
+
+    if (!leftAttemptId || !attemptSnapshots.some((attempt) => attempt.id === leftAttemptId)) {
+      const defaultLeft = attemptSnapshots[Math.max(0, attemptSnapshots.length - 2)];
+      setLeftAttemptId(defaultLeft?.id ?? attemptSnapshots[0]?.id ?? null);
+    }
+
+    if (!rightAttemptId || !attemptSnapshots.some((attempt) => attempt.id === rightAttemptId)) {
+      const defaultRight = attemptSnapshots[attemptSnapshots.length - 1];
+      setRightAttemptId(defaultRight?.id ?? attemptSnapshots[0]?.id ?? null);
+    }
+  }, [attemptSnapshots, leftAttemptId, rightAttemptId]);
 
   async function onRunVisibleTests() {
     if (!problem) {
@@ -255,6 +381,7 @@ export function ProblemWorkspacePage() {
         body: {}
       });
       setAnalysisResult(response.analysis);
+      setAttemptSnapshots(response.attempts);
     } catch (err) {
       setAnalysisError(err instanceof Error ? err.message : "Could not analyze session.");
     } finally {
@@ -270,12 +397,15 @@ export function ProblemWorkspacePage() {
     setCode(problem.starterCode);
     setRunResult(null);
     setRunError(null);
-    setSubmitResult(null);
-    setSubmitError(null);
-    setSessionId(null);
-    setAnalysisResult(null);
-    setAnalysisError(null);
-  }
+            setSubmitResult(null);
+            setSubmitError(null);
+            setSessionId(null);
+            setAnalysisResult(null);
+            setAnalysisError(null);
+            setAttemptSnapshots([]);
+            setLeftAttemptId(null);
+            setRightAttemptId(null);
+          }
 
   return (
     <main className="page workspace-page">
@@ -489,6 +619,89 @@ export function ProblemWorkspacePage() {
                       <li key={recommendation}>{recommendation}</li>
                     ))}
                   </ul>
+                </section>
+
+                <section className="analysis-timeline">
+                  <h4>Attempt Timeline</h4>
+                  <div className="analysis-timeline-list">
+                    {analysisResult.attemptTimeline.map((entry) => (
+                      <article key={entry.attempt_id} className="analysis-timeline-item">
+                        <div className="analysis-timeline-head">
+                          <p>Attempt #{entry.attempt_id}</p>
+                          <span>{toReadableEnum(entry.status)}</span>
+                        </div>
+                        <p className="workspace-test-meta">
+                          {entry.error_type
+                            ? `Error: ${toReadableEnum(entry.error_type)}`
+                            : "No execution error recorded."}
+                        </p>
+                        <p className="workspace-test-meta">
+                          {entry.submitted_at
+                            ? `Submitted: ${new Date(entry.submitted_at).toLocaleString()}`
+                            : "Submitted time unavailable."}
+                        </p>
+                        <p className="workspace-test-meta">
+                          {entry.change_summary ?? "Change summary unavailable."}
+                        </p>
+                        <p className="workspace-test-meta">
+                          Delta: +{entry.lines_added ?? 0} / -{entry.lines_removed ?? 0} lines
+                        </p>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="analysis-diff">
+                  <div className="analysis-diff-head">
+                    <h4>Attempt Diff Viewer</h4>
+                    <div className="analysis-diff-controls">
+                      <label>
+                        From
+                        <select
+                          value={leftAttemptId ?? ""}
+                          onChange={(event) => setLeftAttemptId(Number(event.target.value))}
+                        >
+                          {attemptSnapshots.map((attempt) => (
+                            <option key={`left-${attempt.id}`} value={attempt.id}>
+                              Attempt #{attempt.id}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label>
+                        To
+                        <select
+                          value={rightAttemptId ?? ""}
+                          onChange={(event) => setRightAttemptId(Number(event.target.value))}
+                        >
+                          {attemptSnapshots.map((attempt) => (
+                            <option key={`right-${attempt.id}`} value={attempt.id}>
+                              Attempt #{attempt.id}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                  </div>
+
+                  {selectedLeftAttempt && selectedRightAttempt ? (
+                    <div className="analysis-diff-table" role="table" aria-label="Attempt code diff">
+                      {diffRows.map((row, index) => (
+                        <div key={`${index}-${row.kind}`} className={`analysis-diff-row ${row.kind}`} role="row">
+                          <div className="analysis-diff-cell" role="cell">
+                            <span>{row.leftNumber ?? ""}</span>
+                            <code>{row.leftText || " "}</code>
+                          </div>
+                          <div className="analysis-diff-cell" role="cell">
+                            <span>{row.rightNumber ?? ""}</span>
+                            <code>{row.rightText || " "}</code>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="workspace-test-meta">Submit attempts to compare code versions.</p>
+                  )}
                 </section>
               </section>
             ) : null}
