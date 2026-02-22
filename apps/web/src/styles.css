@@ -16,6 +16,20 @@
   --accent: #195d44;
 }
 
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #e5f0ea;
+  --muted: #9bb0a5;
+  --surface: #101813;
+  --card: #18211c;
+  --border: #2c3a33;
+  --brand: #54b989;
+  --brand-strong: #7ed9ad;
+  --brand-soft: #2a3f35;
+  --deep: #070d09;
+  --accent: #66c497;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -30,6 +44,13 @@ body {
   min-height: 100vh;
 }
 
+:root[data-theme="dark"] body {
+  background:
+    radial-gradient(circle at 16% 12%, #173328 0%, transparent 40%),
+    radial-gradient(circle at 86% 0%, #1b2f27 0%, transparent 36%),
+    linear-gradient(150deg, #0b120e 0%, #101a14 60%, #0b130f 100%);
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -39,6 +60,16 @@ button {
   border: 0;
   cursor: pointer;
   font: inherit;
+}
+
+.theme-toggle-btn {
+  min-width: 108px;
+}
+
+:root[data-theme="dark"] .theme-toggle-btn {
+  border-color: #486457;
+  background: #1d2a23;
+  color: #cae7d9;
 }
 
 .status-text {
@@ -799,6 +830,37 @@ button {
   line-height: 1.62;
 }
 
+.workspace-problem-description p {
+  margin: 0;
+  color: #4f4a45;
+  line-height: 1.62;
+}
+
+.workspace-problem-description p + p {
+  margin-top: 10px;
+}
+
+.workspace-problem-note {
+  border: 1px dashed #cfdcd3;
+  border-radius: 10px;
+  background: #fbfefc;
+  padding: 8px 10px;
+  color: #4f5f57 !important;
+  font-size: 0.86rem;
+}
+
+.workspace-problem-source {
+  font-size: 0.88rem;
+  color: #3f564d !important;
+}
+
+.workspace-source-link {
+  color: #1f7a56;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .workspace-tag-row {
   margin-top: 14px;
   display: flex;
@@ -832,6 +894,19 @@ button {
 
 .workspace-block li + li {
   margin-top: 6px;
+}
+
+.workspace-description-block {
+  margin: 0;
+  border: 1px solid #dce8df;
+  border-radius: 10px;
+  padding: 10px;
+  background: #fcfffd;
+  color: #2f3430;
+  font: 500 0.8rem/1.5 "Consolas", "Menlo", monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .workspace-example-grid {
@@ -2489,4 +2564,292 @@ button {
     transition-duration: 1ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+:root[data-theme="dark"] .brand {
+  color: #d8eee3;
+}
+
+:root[data-theme="dark"] .eyebrow {
+  color: #8ed4b4;
+}
+
+:root[data-theme="dark"] .subtitle,
+:root[data-theme="dark"] .status-text {
+  color: #9cb5a9;
+}
+
+:root[data-theme="dark"] .ghost-btn {
+  border-color: #486457;
+  background: #1d2a23;
+  color: #cae7d9;
+}
+
+:root[data-theme="dark"] .ghost-btn:hover {
+  border-color: #6f9380;
+}
+
+:root[data-theme="dark"] .link-pill {
+  border-color: #4a6559;
+  background: #1c2a23;
+  color: #d4ecdf;
+}
+
+:root[data-theme="dark"] .topbar {
+  border-bottom-color: #2a3a33;
+  background: #111a15f0;
+}
+
+:root[data-theme="dark"] .topbar nav a {
+  color: #bbd3c8;
+}
+
+:root[data-theme="dark"] .topbar nav a.active {
+  border-color: #3f5b4d;
+  background: #1a2721;
+  color: #ddf0e7;
+}
+
+:root[data-theme="dark"] .user-email {
+  color: #9fb7ac;
+}
+
+:root[data-theme="dark"] .problem-card,
+:root[data-theme="dark"] .kpi-card,
+:root[data-theme="dark"] .card {
+  background: #16211c;
+  border-color: #2d3b34;
+  box-shadow: 0 12px 28px #00000033;
+}
+
+:root[data-theme="dark"] .workspace-problem-description p {
+  color: #d0e3d8;
+}
+
+:root[data-theme="dark"] .workspace-problem-note {
+  border-color: #3d5449;
+  background: #192720;
+  color: #aac5b7 !important;
+}
+
+:root[data-theme="dark"] .workspace-problem-source {
+  color: #a8c2b5 !important;
+}
+
+:root[data-theme="dark"] .workspace-source-link {
+  color: #86d8b2;
+}
+
+:root[data-theme="dark"] .workspace-tag-row span {
+  border-color: #3f5b4c;
+  background: #1a2c23;
+  color: #bfe6d3;
+}
+
+:root[data-theme="dark"] .workspace-block ul {
+  color: #acc4b8;
+}
+
+:root[data-theme="dark"] .workspace-description-block,
+:root[data-theme="dark"] .workspace-io-block {
+  border-color: #365045;
+  background: #111b16;
+  color: #d5e9dd;
+}
+
+:root[data-theme="dark"] .workspace-example-card {
+  border-color: #375247;
+  background: #16241d;
+}
+
+:root[data-theme="dark"] .workspace-example-card p {
+  color: #bfd5ca;
+}
+
+:root[data-theme="dark"] .workspace-editor-toolbar {
+  border-bottom-color: #355044;
+  background: #172822;
+}
+
+:root[data-theme="dark"] .workspace-language-picker span {
+  color: #b9d6c7;
+}
+
+:root[data-theme="dark"] .workspace-language-picker select {
+  border-color: #486356;
+  background: #1b2a23;
+  color: #deeee5;
+}
+
+:root[data-theme="dark"] .workspace-results {
+  border-top-color: #33483d;
+  background: #141f1a;
+}
+
+:root[data-theme="dark"] .submit-results {
+  background: #13211a;
+}
+
+:root[data-theme="dark"] .analysis-results {
+  background: #12211b;
+}
+
+:root[data-theme="dark"] .workspace-test-card {
+  border-color: #32463b;
+  background: #17241d;
+}
+
+:root[data-theme="dark"] .workspace-test-card.passed {
+  border-color: #3f7458;
+  background: #153124;
+}
+
+:root[data-theme="dark"] .workspace-test-card.failed {
+  border-color: #7e5555;
+  background: #321f1f;
+}
+
+:root[data-theme="dark"] .workspace-test-title {
+  color: #ebf6ef;
+}
+
+:root[data-theme="dark"] .workspace-test-meta {
+  color: #a6bdb1;
+}
+
+:root[data-theme="dark"] .workspace-test-card p {
+  color: #d5e6dc;
+}
+
+:root[data-theme="dark"] .analysis-concept-card {
+  border-color: #355247;
+  background: #16251f;
+}
+
+:root[data-theme="dark"] .analysis-concept-card p {
+  color: #a9c5b9;
+}
+
+:root[data-theme="dark"] .analysis-concept-name {
+  color: #dcf1e7;
+}
+
+:root[data-theme="dark"] .analysis-diagnostics {
+  border-color: #365046;
+  background: #13231c;
+}
+
+:root[data-theme="dark"] .analysis-diagnostic-grid article {
+  border-color: #3a5549;
+  background: #1a2a23;
+}
+
+:root[data-theme="dark"] .analysis-diagnostic-grid p {
+  color: #9db7aa;
+}
+
+:root[data-theme="dark"] .analysis-diagnostic-grid strong {
+  color: #d7efe3;
+}
+
+:root[data-theme="dark"] .analysis-mastery-item {
+  border-color: #355046;
+  background: #15241d;
+}
+
+:root[data-theme="dark"] .analysis-mastery-head p {
+  color: #daeee3;
+}
+
+:root[data-theme="dark"] .analysis-mastery-head span {
+  color: #a5bcb1;
+}
+
+:root[data-theme="dark"] .analysis-mastery-rail {
+  background: #2a3f35;
+}
+
+:root[data-theme="dark"] .analysis-weak-topic-card {
+  border-color: #5f5440;
+  background: #2b271c;
+}
+
+:root[data-theme="dark"] .analysis-weak-topic-card p {
+  color: #d5cbb5;
+}
+
+:root[data-theme="dark"] .analysis-hotspot-item {
+  border-color: #355045;
+  background: #16241d;
+}
+
+:root[data-theme="dark"] .analysis-hotspot-item p {
+  color: #bed6ca;
+}
+
+:root[data-theme="dark"] .analysis-practice-group {
+  border-color: #355046;
+  background: #14221b;
+}
+
+:root[data-theme="dark"] .analysis-practice-card {
+  border-color: #365247;
+  background: #1a2821;
+}
+
+:root[data-theme="dark"] .analysis-practice-card h5 {
+  color: #dcf1e6;
+}
+
+:root[data-theme="dark"] .analysis-practice-card p {
+  color: #afc7bb;
+}
+
+:root[data-theme="dark"] .analysis-timeline-item {
+  border-color: #365046;
+  background: #17241e;
+}
+
+:root[data-theme="dark"] .analysis-timeline-head p {
+  color: #e3f3ea;
+}
+
+:root[data-theme="dark"] .analysis-timeline-head span {
+  color: #9acfb8;
+}
+
+:root[data-theme="dark"] .analysis-diff-table {
+  border-color: #355046;
+}
+
+:root[data-theme="dark"] .analysis-diff-row {
+  border-top-color: #2f4439;
+}
+
+:root[data-theme="dark"] .analysis-diff-row.same {
+  background: #17241d;
+}
+
+:root[data-theme="dark"] .analysis-diff-row.added {
+  background: #183423;
+}
+
+:root[data-theme="dark"] .analysis-diff-row.removed {
+  background: #362020;
+}
+
+:root[data-theme="dark"] .analysis-diff-row.changed {
+  background: #3a2f1d;
+}
+
+:root[data-theme="dark"] .analysis-diff-cell + .analysis-diff-cell {
+  border-left-color: #2e4438;
+}
+
+:root[data-theme="dark"] .analysis-diff-cell span {
+  color: #91aa9f;
+}
+
+:root[data-theme="dark"] .analysis-diff-cell code {
+  color: #dcefe5;
 }

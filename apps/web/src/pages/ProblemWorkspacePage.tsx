@@ -266,6 +266,15 @@ type DiffRow = {
   kind: "same" | "added" | "removed" | "changed";
 };
 
+type ParsedProblemDescription = {
+  statementParagraphs: string[];
+  inputFormat: string;
+  outputFormat: string;
+  examplesText: string;
+  source: string | null;
+  importNote: string | null;
+};
+
 function buildDiffRows(previousCode: string, currentCode: string): DiffRow[] {
   const previousLines = previousCode.split("\n");
   const currentLines = currentCode.split("\n");
@@ -327,6 +336,113 @@ function buildDiffRows(previousCode: string, currentCode: string): DiffRow[] {
   }
 
   return rows;
+}
+
+function normalizeDescriptionLines(rawDescription: string): string[] {
+  const rawLines = rawDescription.replace(/\r\n/g, "\n").split("\n");
+  const normalized: string[] = [];
+
+  for (let index = 0; index < rawLines.length; index += 1) {
+    const current = rawLines[index]?.trimEnd() ?? "";
+    const next = rawLines[index + 1]?.trim() ?? "";
+
+    const isExactDuplicate = current.length > 0 && current === next;
+    const isPrefixDuplicate =
+      current.length >= 20 && next.length > current.length && next.startsWith(current);
+
+    if (isExactDuplicate || isPrefixDuplicate) {
+      continue;
+    }
+
+    if (current.trim().length === 0 && normalized[normalized.length - 1] === "") {
+      continue;
+    }
+
+    normalized.push(current);
+  }
+
+  return normalized;
+}
+
+function parseProblemDescription(rawDescription: string): ParsedProblemDescription {
+  const normalizedText = normalizeDescriptionLines(rawDescription).join("\n").trim();
+  if (!normalizedText) {
+    return {
+      statementParagraphs: [],
+      inputFormat: "",
+      outputFormat: "",
+      examplesText: "",
+      source: null,
+      importNote: null
+    };
+  }
+
+  const sectionRegex = /-----\s*(input|output|examples)\s*-----/gi;
+  const sectionMatches = [...normalizedText.matchAll(sectionRegex)];
+  const sourceMatch = normalizedText.match(/(?:^|\n)Source:\s*([^\n]+)/i);
+  const sourceSectionStart = sourceMatch?.index ?? -1;
+  const sourceLineEnd = sourceMatch ? sourceSectionStart + sourceMatch[0].length : -1;
+  const contentEnd = sourceSectionStart >= 0 ? sourceSectionStart : normalizedText.length;
+  const statementEnd =
+    sectionMatches.length > 0
+      ? Math.min(sectionMatches[0]?.index ?? contentEnd, contentEnd)
+      : contentEnd;
+
+  let statement = normalizedText.slice(0, statementEnd).trim();
+  const parsedSections: { inputFormat: string; outputFormat: string; examplesText: string } = {
+    inputFormat: "",
+    outputFormat: "",
+    examplesText: ""
+  };
+
+  for (let index = 0; index < sectionMatches.length; index += 1) {
+    const match = sectionMatches[index];
+    if (!match || typeof match.index !== "number") {
+      continue;
+    }
+
+    const sectionName = match[1]?.toLowerCase();
+    const valueStart = match.index + match[0].length;
+    const nextSectionStart =
+      index + 1 < sectionMatches.length && typeof sectionMatches[index + 1]?.index === "number"
+        ? (sectionMatches[index + 1]?.index ?? contentEnd)
+        : contentEnd;
+    const value = normalizedText.slice(valueStart, Math.min(nextSectionStart, contentEnd)).trim();
+
+    if (sectionName === "input") {
+      parsedSections.inputFormat = value;
+    } else if (sectionName === "output") {
+      parsedSections.outputFormat = value;
+    } else if (sectionName === "examples") {
+      parsedSections.examplesText = value;
+    }
+  }
+
+  let importNote: string | null = null;
+  let footer = sourceLineEnd >= 0 ? normalizedText.slice(sourceLineEnd).trim() : "";
+  const importNoteMatch = footer.match(/Imported from APPS dataset[^\n]*/i);
+  if (importNoteMatch?.[0]) {
+    importNote = importNoteMatch[0].trim();
+    footer = footer.replace(importNoteMatch[0], "").trim();
+  }
+
+  if (footer.length > 0) {
+    statement = `${statement}\n\n${footer}`.trim();
+  }
+
+  const statementParagraphs = statement
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.replace(/\n+/g, " ").trim())
+    .filter((paragraph) => paragraph.length > 0);
+
+  return {
+    statementParagraphs,
+    inputFormat: parsedSections.inputFormat,
+    outputFormat: parsedSections.outputFormat,
+    examplesText: parsedSections.examplesText,
+    source: sourceMatch?.[1]?.trim() ?? null,
+    importNote
+  };
 }
 
 export function ProblemWorkspacePage() {
@@ -474,6 +590,21 @@ export function ProblemWorkspacePage() {
     }
     return buildDiffRows(selectedLeftAttempt.code, selectedRightAttempt.code);
   }, [selectedLeftAttempt, selectedRightAttempt]);
+
+  const parsedDescription = useMemo(() => {
+    if (!problem) {
+      return {
+        statementParagraphs: [],
+        inputFormat: "",
+        outputFormat: "",
+        examplesText: "",
+        source: null,
+        importNote: null
+      } as ParsedProblemDescription;
+    }
+
+    return parseProblemDescription(problem.description);
+  }, [problem]);
 
   const topicMasteryRows = useMemo(() => {
     if (!analysisResult) {
@@ -789,7 +920,7 @@ export function ProblemWorkspacePage() {
         </div>
         <div className="workspace-header-actions">
           <button type="button" className="ghost-btn" onClick={() => void onToggleFocusMode()}>
-            {focusMode ? "Exit Focus Mode" : "Focus Mode"}
+            {focusMode ? "Exit Full Screen" : "Full Screen"}
           </button>
           <Link to="/problems" className="ghost-btn">
             Back To Catalog
@@ -816,7 +947,36 @@ export function ProblemWorkspacePage() {
           <article className="workspace-problem-panel card">
             <p className="problem-difficulty">{problem.difficulty}</p>
             <h2>{problem.summary}</h2>
-            <p>{problem.description}</p>
+
+            <div className="workspace-problem-description">
+              {parsedDescription.statementParagraphs.length > 0 ? (
+                parsedDescription.statementParagraphs.map((paragraph, index) => (
+                  <p key={`description-${index}`}>{paragraph}</p>
+                ))
+              ) : (
+                <p>{problem.description}</p>
+              )}
+              {parsedDescription.importNote ? (
+                <p className="workspace-problem-note">{parsedDescription.importNote}</p>
+              ) : null}
+              {parsedDescription.source ? (
+                <p className="workspace-problem-source">
+                  Source:{" "}
+                  {parsedDescription.source.startsWith("http") ? (
+                    <a
+                      href={parsedDescription.source}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="workspace-source-link"
+                    >
+                      {parsedDescription.source}
+                    </a>
+                  ) : (
+                    parsedDescription.source
+                  )}
+                </p>
+              ) : null}
+            </div>
 
             <div className="workspace-tag-row">
               {problem.concepts.map((concept) => (
@@ -824,26 +984,40 @@ export function ProblemWorkspacePage() {
               ))}
             </div>
 
-            <section className="workspace-block">
-              <h3>Constraints</h3>
-              <ul>
-                {problem.constraints.map((constraint) => (
-                  <li key={constraint}>{constraint}</li>
-                ))}
-              </ul>
-            </section>
+            {parsedDescription.inputFormat ? (
+              <section className="workspace-block">
+                <h3>Input Format</h3>
+                <pre className="workspace-description-block">{formatIo(parsedDescription.inputFormat)}</pre>
+              </section>
+            ) : null}
+
+            {parsedDescription.outputFormat ? (
+              <section className="workspace-block">
+                <h3>Output Format</h3>
+                <pre className="workspace-description-block">{formatIo(parsedDescription.outputFormat)}</pre>
+              </section>
+            ) : null}
+
+            {problem.constraints.length > 0 ? (
+              <section className="workspace-block">
+                <h3>Constraints</h3>
+                <ul>
+                  {problem.constraints.map((constraint) => (
+                    <li key={constraint}>{constraint}</li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
 
             <section className="workspace-block">
               <h3>Examples</h3>
               <div className="workspace-example-grid">
                 {problem.examples.map((example, index) => (
                   <article key={`${example.input}-${index}`} className="workspace-example-card">
-                    <p>
-                      <strong>Input:</strong> {example.input}
-                    </p>
-                    <p>
-                      <strong>Output:</strong> {example.output}
-                    </p>
+                    <p className="workspace-test-meta">Input</p>
+                    <pre className="workspace-io-block">{formatIo(example.input)}</pre>
+                    <p className="workspace-test-meta">Output</p>
+                    <pre className="workspace-io-block">{formatIo(example.output)}</pre>
                     {example.explanation ? (
                       <p>
                         <strong>Explanation:</strong> {example.explanation}
@@ -873,6 +1047,9 @@ export function ProblemWorkspacePage() {
               <div className="workspace-editor-actions">
                 <button type="button" className="ghost-btn" onClick={onResetStarter}>
                   Reset Starter
+                </button>
+                <button type="button" className="ghost-btn" onClick={() => void onToggleFocusMode()}>
+                  {focusMode ? "Exit Full Screen" : "Full Screen"}
                 </button>
                 <button
                   type="button"

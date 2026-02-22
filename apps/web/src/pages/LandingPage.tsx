@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { AuthVisual } from "../components/AuthVisual";
+import { ThemeToggleButton } from "../components/ThemeToggleButton";
 
 const TRUSTED_BY = [
   "AlgoBootcamp",
@@ -49,6 +50,7 @@ export function LandingPage() {
         </Link>
 
         <div className="landing-nav-actions startup-nav-actions">
+          <ThemeToggleButton compact />
           {user ? (
             <>
               <Link className="link-pill" to="/problems">

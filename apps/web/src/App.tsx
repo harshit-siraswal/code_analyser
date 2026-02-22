@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet, Route, Routes } from "react-router-dom";
 import { useAuth } from "./auth/AuthProvider";
 import { ProtectedRoute, PublicOnlyRoute } from "./auth/ProtectedRoute";
+import { ThemeToggleButton } from "./components/ThemeToggleButton";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
@@ -24,6 +25,7 @@ function AppShell() {
           <NavLink to="/dashboard">Dashboard</NavLink>
         </nav>
         <div className="topbar-actions">
+          <ThemeToggleButton compact />
           <span className="user-email">{user?.email}</span>
           <button type="button" className="ghost-btn" onClick={() => void signOutUser()}>
             Sign out
