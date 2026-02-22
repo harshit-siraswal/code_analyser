@@ -750,12 +750,13 @@ export function ProblemWorkspacePage() {
     ]);
   }
 
-  async function generateAnalysisForSession(targetSessionId: string) {
-    const token = await getIdToken();
-    if (!token) {
-      throw new Error("You need to sign in before analyzing.");
-    }
+async function generateAnalysisForSession(targetSessionId: string) {
+  const token = await getIdToken();
+  if (!token) {
+    throw new Error("You need to sign in before analyzing.");
+  }
 
+  try {
     const response = await apiFetch<AnalyzeResponse>(`/sessions/${targetSessionId}/analyze`, {
       method: "POST",
       token,
@@ -763,7 +764,24 @@ export function ProblemWorkspacePage() {
     });
 
     applyAnalysisResult(targetSessionId, response, `$ analyze --session ${targetSessionId}`);
+  } catch (error) {
+    const message = error instanceof Error ? error.message.toLowerCase() : "";
+    const timedOut = message.includes("timed out") || message.includes("aborted");
+    if (!timedOut) {
+      throw error;
+    }
+
+    try {
+      const saved = await apiFetch<AnalyzeResponse>(`/sessions/${targetSessionId}/analysis`, {
+        token
+      });
+      applyAnalysisResult(targetSessionId, saved, `$ analyze --session ${targetSessionId} --load`);
+      return;
+    } catch {
+      throw error;
+    }
   }
+}
 
   async function loadOrGenerateAnalysis(targetSessionId: string) {
     const token = await getIdToken();
