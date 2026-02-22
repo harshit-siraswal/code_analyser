@@ -9,6 +9,8 @@ Last updated: February 22, 2026
 - [x] Terminal and run-result panels are present in workspace UI.
 - [x] Backend now serves DB-backed problems from imported dataset.
 - [x] Azure API and analysis services are running custom images (`prod2`).
+- [x] Dashboard session cards now deep-link into workspace analysis (`sessionId` + auto-load flow).
+- [x] Analysis payload can surface optional LLM mode metadata (Gemini-augmented vs heuristic).
 
 ## 2. Blocking Issues To Resolve First
 
@@ -41,12 +43,12 @@ Last updated: February 22, 2026
 - [ ] Confirm `/api/v1/problems` shows imported problem set in UI.
 - [ ] Confirm dashboard is fed from backend data, not static fallback.
 - [ ] Confirm run/submit works in each supported language option.
-- [ ] Confirm analysis render path works from session payload.
+- [x] Confirm analysis render path works from session payload.
 
 ## 4. Next Engineering Work
 
-- [ ] Roll out paginated problem browsing with search and total count.
-- [ ] Add richer analysis visualizations in dashboard/workspace.
+- [x] Roll out paginated problem browsing with search and total count.
+- [x] Add richer analysis visualizations in dashboard/workspace.
 - [ ] Add API failure banners with explicit env-mismatch diagnostics.
 - [ ] Add smoke tests to release checklist.
 

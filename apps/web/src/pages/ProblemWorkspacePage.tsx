@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { apiFetch } from "../lib/api";
 
@@ -112,6 +112,8 @@ type AnalyzeResponse = {
     }>;
     recommendations: string[];
     timeComplexity: string | null;
+    analysisMode?: string;
+    llmProvider?: string | null;
     createdAt: string;
   };
   attempts: SessionAttemptSnapshot[];
@@ -290,6 +292,10 @@ function buildDiffRows(previousCode: string, currentCode: string): DiffRow[] {
 export function ProblemWorkspacePage() {
   const { slug } = useParams<{ slug: string }>();
   const { getIdToken } = useAuth();
+  const [searchParams] = useSearchParams();
+  const hydratedSessionRef = useRef<string | null>(null);
+  const requestedSessionId = searchParams.get("sessionId");
+  const shouldAutoAnalyze = searchParams.get("autoAnalyze") === "1";
   const [problem, setProblem] = useState<ProblemDetail | null>(null);
   const [code, setCode] = useState("");
   const [languages, setLanguages] = useState<LanguageOption[]>(FALLBACK_LANGUAGES);
@@ -332,6 +338,7 @@ export function ProblemWorkspacePage() {
       setAttemptSnapshots([]);
       setLeftAttemptId(null);
       setRightAttemptId(null);
+      hydratedSessionRef.current = null;
       setTerminalLines(["Terminal ready. Select a language and run visible tests."]);
 
       try {
@@ -429,6 +436,64 @@ export function ProblemWorkspacePage() {
     }
   }, [attemptSnapshots, leftAttemptId, rightAttemptId]);
 
+  function applyAnalysisResult(
+    targetSessionId: string,
+    response: AnalyzeResponse,
+    commandLabel: string
+  ) {
+    setSessionId(targetSessionId);
+    setAnalysisResult(response.analysis);
+    setAttemptSnapshots(response.attempts);
+    setTerminalLines([
+      commandLabel,
+      `summary: ${response.analysis.summary}`,
+      `complexity: ${response.analysis.timeComplexity ?? "Unknown"}`,
+      `recommendations: ${response.analysis.recommendations.length}`
+    ]);
+  }
+
+  async function generateAnalysisForSession(targetSessionId: string) {
+    const token = await getIdToken();
+    if (!token) {
+      throw new Error("You need to sign in before analyzing.");
+    }
+
+    const response = await apiFetch<AnalyzeResponse>(`/sessions/${targetSessionId}/analyze`, {
+      method: "POST",
+      token,
+      body: {}
+    });
+
+    applyAnalysisResult(targetSessionId, response, `$ analyze --session ${targetSessionId}`);
+  }
+
+  async function loadOrGenerateAnalysis(targetSessionId: string) {
+    const token = await getIdToken();
+    if (!token) {
+      throw new Error("You need to sign in before analyzing.");
+    }
+
+    try {
+      const saved = await apiFetch<AnalyzeResponse>(`/sessions/${targetSessionId}/analysis`, {
+        token
+      });
+      applyAnalysisResult(targetSessionId, saved, `$ analyze --session ${targetSessionId} --load`);
+      return;
+    } catch (error) {
+      const message = error instanceof Error ? error.message.toLowerCase() : "";
+      if (!message.includes("not generated")) {
+        throw error;
+      }
+    }
+
+    const generated = await apiFetch<AnalyzeResponse>(`/sessions/${targetSessionId}/analyze`, {
+      method: "POST",
+      token,
+      body: {}
+    });
+    applyAnalysisResult(targetSessionId, generated, `$ analyze --session ${targetSessionId}`);
+  }
+
   async function onRunVisibleTests() {
     if (!problem) {
       return;
@@ -502,24 +567,7 @@ export function ProblemWorkspacePage() {
     setAnalysisError(null);
 
     try {
-      const token = await getIdToken();
-      if (!token) {
-        throw new Error("You need to sign in before analyzing.");
-      }
-
-      const response = await apiFetch<AnalyzeResponse>(`/sessions/${sessionId}/analyze`, {
-        method: "POST",
-        token,
-        body: {}
-      });
-      setAnalysisResult(response.analysis);
-      setAttemptSnapshots(response.attempts);
-      setTerminalLines([
-        `$ analyze --session ${sessionId}`,
-        `summary: ${response.analysis.summary}`,
-        `complexity: ${response.analysis.timeComplexity ?? "Unknown"}`,
-        `recommendations: ${response.analysis.recommendations.length}`
-      ]);
+      await generateAnalysisForSession(sessionId);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Could not analyze session.";
       setAnalysisError(message);
@@ -528,6 +576,39 @@ export function ProblemWorkspacePage() {
       setAnalyzing(false);
     }
   }
+
+  useEffect(() => {
+    if (!problem || loading || Boolean(error) || !requestedSessionId) {
+      return;
+    }
+
+    if (hydratedSessionRef.current === requestedSessionId) {
+      return;
+    }
+
+    hydratedSessionRef.current = requestedSessionId;
+    setSessionId(requestedSessionId);
+
+    if (!shouldAutoAnalyze) {
+      setTerminalLines([
+        `$ session ${requestedSessionId}`,
+        "Session restored from dashboard. Click Analyze to refresh insights."
+      ]);
+      return;
+    }
+
+    setAnalyzing(true);
+    setAnalysisError(null);
+    void loadOrGenerateAnalysis(requestedSessionId)
+      .catch((err) => {
+        const message = err instanceof Error ? err.message : "Could not analyze session.";
+        setAnalysisError(message);
+        setTerminalLines([`$ analyze --session ${requestedSessionId}`, `error: ${message}`]);
+      })
+      .finally(() => {
+        setAnalyzing(false);
+      });
+  }, [error, loading, problem, requestedSessionId, shouldAutoAnalyze]);
 
   function onResetStarter() {
     if (!problem) {
@@ -780,6 +861,12 @@ export function ProblemWorkspacePage() {
                   <p className="workspace-test-meta">
                     Estimated Complexity: {analysisResult.timeComplexity ?? "Unknown"}
                   </p>
+                  {analysisResult.analysisMode ? (
+                    <p className="workspace-test-meta">
+                      Analysis Mode: {toReadableLabel(analysisResult.analysisMode)}
+                      {analysisResult.llmProvider ? ` (${analysisResult.llmProvider})` : ""}
+                    </p>
+                  ) : null}
                 </header>
 
                 <div className="analysis-concepts">

@@ -86,7 +86,7 @@ export function ProblemsPage() {
     return () => {
       isMounted = false;
     };
-  }, [page, query]);
+  }, [difficulty, page, query]);
 
   const filtered = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();

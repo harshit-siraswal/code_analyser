@@ -22,6 +22,7 @@ type DashboardResponse = {
   recentSessions: Array<{
     sessionId: string;
     title: string;
+    slug: string | null;
     status: string;
     durationMinutes: number;
     attempts: number;
@@ -219,8 +220,18 @@ export function DashboardPage() {
                         {toReadableLabel(session.status)}
                       </span>
                       <small>
-                        {session.durationMinutes}m · {session.attempts} attempt(s)
+                        {session.durationMinutes}m - {session.attempts} attempt(s)
                       </small>
+                      {session.slug ? (
+                        <Link
+                          to={`/problems/${session.slug}?sessionId=${encodeURIComponent(session.sessionId)}&autoAnalyze=1`}
+                          className="ghost-btn compact"
+                        >
+                          Open Analysis
+                        </Link>
+                      ) : (
+                        <small>Problem slug unavailable</small>
+                      )}
                     </div>
                   </article>
                 ))

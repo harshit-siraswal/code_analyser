@@ -25,12 +25,14 @@ Build and launch the MVP of the Deep Analysis coding practice platform in 12 wee
 - Firebase admin and Neon DB secrets are configured in Azure API container app.
 - APPS import flow is working; DB-backed problem catalog serves imported records.
 - Frontend workspace supports Python/C/C++/Java execution paths.
+- Dashboard recent sessions now deep-link into workspace with session-aware analysis loading.
+- Analysis UI now shows mode metadata when backend provides LLM-augmented responses.
+- Problem list paging + difficulty query sync are implemented in UI contract.
 
 ### In Progress
 
 - Production frontend environment alignment to Azure API URL.
-- Problem catalog pagination rollout (`page`, `limit`, `total`) across API and UI.
-- End-to-end analysis UX polish (session timeline and recommendations).
+- End-to-end validation in production after latest API/UI deployments.
 
 ### Current Priority
 
