@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { AuthVisual } from "../components/AuthVisual";
@@ -39,8 +40,65 @@ const FLOW = [
   { phase: "03", title: "Analyze", details: "Get focused recommendations." }
 ];
 
+const HERO_HEADLINE = "Practice with the rigor of a real engineering team.";
+const HERO_SUBTITLE =
+  "Run, submit, and analyze in fast feedback loops with clear next actions every session.";
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export function LandingPage() {
   const { user, signOutUser } = useAuth();
+  const [typedHeadline, setTypedHeadline] = useState("");
+  const [typedSubtitle, setTypedSubtitle] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const typeLine = async (
+      fullText: string,
+      setText: (value: string) => void,
+      speedMs: number
+    ) => {
+      for (let index = 1; index <= fullText.length; index += 1) {
+        if (cancelled) {
+          return;
+        }
+        setText(fullText.slice(0, index));
+        await wait(speedMs);
+      }
+    };
+
+    const runTypingAnimation = async () => {
+      const prefersReducedMotion =
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      if (prefersReducedMotion) {
+        setTypedHeadline(HERO_HEADLINE);
+        setTypedSubtitle(HERO_SUBTITLE);
+        return;
+      }
+
+      setTypedHeadline("");
+      setTypedSubtitle("");
+
+      await typeLine(HERO_HEADLINE, setTypedHeadline, 24);
+      await wait(180);
+      await typeLine(HERO_SUBTITLE, setTypedSubtitle, 16);
+    };
+
+    void runTypingAnimation();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const isHeadlineTyping = typedHeadline.length < HERO_HEADLINE.length;
+  const isSubtitleTyping =
+    typedHeadline.length === HERO_HEADLINE.length && typedSubtitle.length < HERO_SUBTITLE.length;
 
   return (
     <main className="landing-page startup-landing fintech-theme">
@@ -97,9 +155,15 @@ export function LandingPage() {
       <section className="startup-hero">
         <div className="startup-hero-copy">
           <p className="eyebrow">Code Intelligence Studio</p>
-          <h1>Train like a serious engineering team.</h1>
-          <p className="subtitle startup-subtitle">
-            Faster feedback loops, cleaner submissions, clearer next steps.
+          <h1 className={`startup-typed-heading${isHeadlineTyping ? " is-typing" : ""}`}>
+            {typedHeadline}
+          </h1>
+          <p
+            className={`subtitle startup-subtitle startup-typed-subline${
+              isSubtitleTyping ? " is-typing" : ""
+            }`}
+          >
+            {typedSubtitle}
           </p>
 
           <div className="hero-cta startup-hero-cta">
