@@ -40,9 +40,9 @@ const FLOW = [
   { phase: "03", title: "Analyze", details: "Get focused recommendations." }
 ];
 
-const HERO_HEADLINE = "Practice with the rigor of a real engineering team.";
+const HERO_HEADLINE = "Get the depth of feedback a real engineering team would give.";
 const HERO_SUBTITLE =
-  "Run, submit, and analyze in fast feedback loops with clear next actions every session.";
+  "Every attempt is saved and compared to surface strong and weak topics, recurring logic vs syntax mistakes, time-complexity growth, and the next problems to improve faster.";
 
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -84,9 +84,9 @@ export function LandingPage() {
       setTypedHeadline("");
       setTypedSubtitle("");
 
-      await typeLine(HERO_HEADLINE, setTypedHeadline, 24);
-      await wait(180);
-      await typeLine(HERO_SUBTITLE, setTypedSubtitle, 16);
+      await typeLine(HERO_HEADLINE, setTypedHeadline, 42);
+      await wait(320);
+      await typeLine(HERO_SUBTITLE, setTypedSubtitle, 30);
     };
 
     void runTypingAnimation();

@@ -1646,7 +1646,7 @@ button {
 
 .startup-hero-copy h1 {
   margin: 10px 0 14px;
-  max-width: 17ch;
+  max-width: 20ch;
   font-family: "Instrument Serif", Georgia, serif;
   font-size: clamp(2.4rem, 5.3vw, 4.25rem);
   line-height: 0.98;
@@ -1654,7 +1654,7 @@ button {
 }
 
 .startup-typed-heading {
-  min-height: clamp(4.8rem, 10.6vw, 8.5rem);
+  min-height: clamp(5.8rem, 12vw, 9.4rem);
 }
 
 .startup-subtitle {
@@ -1664,7 +1664,7 @@ button {
 }
 
 .startup-typed-subline {
-  min-height: 3.4rem;
+  min-height: 4.8rem;
 }
 
 .startup-typed-heading.is-typing::after,
