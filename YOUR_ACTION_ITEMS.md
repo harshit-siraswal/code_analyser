@@ -7,6 +7,8 @@ Last updated: February 23, 2026
 - [x] Auth shell (login/register/protected routes) is live.
 - [x] Problem workspace supports language selection (Python/C/C++/Java).
 - [x] Terminal and run-result panels are present in workspace UI.
+- [x] Frontend GitHub `main` is synced at commit `0f5a36a` (landing.css remains local-only).
+- [x] Backend GitHub `main` includes Judge0 retry fix commit `7dcb338`.
 - [x] Backend now serves DB-backed problems from imported dataset.
 - [x] Azure API and analysis services are running custom images (`prod2`).
 - [x] Dashboard session cards now deep-link into workspace analysis (`sessionId` + auto-load flow).
@@ -26,10 +28,20 @@ Last updated: February 23, 2026
 ## 2. Blocking Issues To Resolve First
 
 - [ ] Production frontend still points to legacy Render API in at least one deployment.
-- [ ] Legacy Render API returns `500` due missing `DATABASE_URL`.
+- [ ] Legacy Render API `GET /api/v1/languages` returns `503` (`Judge0 is not configured on the API service`).
+- [ ] Azure API is still serving pre-fix backend behavior; `run` probes still return blanket `statusId: 13` (`Internal Error`) for Python and C.
 - [ ] COOP popup warning appears during Google popup flow (warning-level, not root API failure).
 
 ## 3. Immediate Next Steps
+
+### P0 - Deploy backend hotfix to Azure API
+
+- [ ] Build and push API image from backend commit `7dcb338`.
+- [ ] Update `code-analyser-api-dev` to that new image tag and activate latest revision.
+- [ ] Re-run probes:
+  - `POST /api/v1/problems/two-sum/run` (`languageId=71`)
+  - `POST /api/v1/problems/{db-problem-slug}/run` (`languageId=50`)
+  - Expected: real verdicts (`Wrong Answer`/`Accepted`/compile/runtime), not blanket `Internal Error`.
 
 ### P0 - Frontend env correction
 
